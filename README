@@ -1,0 +1,8 @@
+Walter is a single header library made with fewer complications for
+writing unit tests in C.
+
+Files:
+
+	walter.h    Library with documentation and example
+	demo.t.c    Usage demonstration program
+	test        Simple compile and run script

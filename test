@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+set -e				# Exit on first error
+
+CC="cc"
+CFLAGS="-Wall -Wextra -Wshadow -Wmissing-declarations -Wswitch-enum -pedantic -std=c89"
+
+$CC $CFLAGS -o demo.t demo.t.c && ./demo.t
