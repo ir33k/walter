@@ -11,21 +11,23 @@
  *
  *	TEST("Test message")            // Define test with assertions
  *	{
+ *		FAIL("fail message");   // Fail here with message
+ *		END();                  // End test here
+ *
  *		OK(bool);               // Is boolean true?
  *		EQ(num1, num2);         // Are numbers equal?
  *		STR_EQ(s1, s2);         // Are strings equal?
  *		BUF_EQ(b1, b2, size);   // Are buffers equal?
  *
- *		// TODO(irek): Add "not" assertions.
+ *		NOT_EQ(num1, num2);     // Negations
+ *		STR_NOT_EQ(s1, s2);
+ *		BUF_NOT_EQ(b1, b2, size);
  *
  *		// ASSERT is like OK but with custom fail message
  *		ASSERT(bool, "fail message");
  *
- *		// Helper functions that returns boolean
+ *		// Helper function that returns boolean
  *		OK(test_str_eq(str1, str2));
- *
- *		FAIL("fail message");   // Fail here with message
- *		PASS();                 // End test here with success
  *	}
  *
  *	TEST("Another test 1") { ... }  // Define as many as TESTMAX
@@ -65,7 +67,9 @@
 #define TESTMAX    64		/* Maximum number of tests */
 #endif
 
-/* Main TEST macro */
+/* Return true if number N is set with a F flag. */
+#define TEST__FLAG(n,f) ((n & f) == f)
+
 #define TEST____(_msg, id, _line)                               \
 	void test__body##id(void);                              \
 	/* This function will be run before "main" function.  It's the
@@ -92,7 +96,8 @@
 
 /* Assertions */
 #define ASSERT____(bool, onfail, line) do {                     \
-		if (bool) break;            /* Pass */          \
+		test__.sum++;					\
+		if (bool) break;            /* Pass */		\
 		test__.fail++;              /* Fail */		\
 		if (test__.fail == 1) putchar('\n');		\
 		fprintf(stderr, "%s:%d: error: ",		\
@@ -100,24 +105,28 @@
 		onfail;                                         \
 		fputc('\n', stderr);                            \
 		/* In -q quick mode stop test on first fail*/	\
-		if ((test__.opt & TEST_OPT_Q) == TEST_OPT_Q)	\
+		if (TEST__FLAG(test__.opt, TEST_OPT_Q))		\
 			return;					\
 	} while(0)
 #define ASSERT__(bool, onfail) ASSERT____(bool, onfail, __LINE__)
+
+/* Main assertions */
 #define ASSERT(x,msg) ASSERT__(x, fputs(msg, stderr))
-#define OK(x)         ASSERT(x, "'"#x"' not ok (it's 0)")
-#define EQ(a,b)       ASSERT((a) == (b), "'"#a"' not equal to '"#b"'")
-#define FAIL(msg)     ASSERT(0, msg)
-#define STR_EQ(a,b)   ASSERT__(test_str_eq(a, b),                       \
-			       fprintf(stderr,                          \
-				       "not equal:\n\t'%s'\n\t'%s'",    \
-				       a ? a : "<NULL>",                \
-				       b ? b : "<NULL>"))
-#define BUF_EQ(a,b,n) ASSERT__(strncmp(a, b, n) == 0,                   \
-			       fprintf(stderr,                          \
-				       "not equal:\n\t'%-*s'\n\t'%-*s'", \
-				       n, a, n, b))
-#define PASS() do { test__.fail = 0; return; } while(0)
+#define OK(x) ASSERT(x, "'"#x"' not ok")
+#define EQ(a,b) ASSERT((a) == (b), "'"#a"' not equal to '"#b"'")
+#define STR_EQ(a,b) ASSERT__(test_str_eq(a, b),			\
+			     test__pstrs("not equal", a, b))
+#define BUF_EQ(a,b,n) ASSERT__(strncmp(a, b, n) == 0,			\
+			       test__pbufs("not equal", a, b, n))
+/* Negations */
+#define NOT_EQ(a,b) ASSERT((a) != (b), "'"#a"' equal to '"#b"'")
+#define STR_NOT_EQ(a,b) ASSERT__(!test_str_eq(a, b),		\
+				 test__pstrs("equal", a, b))
+#define BUF_NOT_EQ(a,b,n) ASSERT__(strncmp(a, b, n) != 0,		\
+				   test__pbufs("equal", a, b, n))
+/* Flow control */
+#define FAIL(msg) ASSERT(0, msg)
+#define END() do { return; } while(0)
 
 typedef enum {
 	TEST_OPT__ = 0,		/* Nothing */
@@ -128,6 +137,7 @@ typedef enum {
 typedef struct {
 	size_t   all;		/* Number of all tests */
 	size_t   err;		/* Number of failed tests */
+	size_t   sum;		/* Last test assertions count */
 	size_t   fail;		/* Last failed assertions count */
 	size_t   line[TESTMAX]; /* TEST macros line in file */
 	TestOpt  opt;		/* Option flags with test modes */
@@ -138,10 +148,12 @@ typedef struct {
 
 void test__usage(char *argv0);
 void test__init(char *fname);
+void test__pbufs(char *msg, char *a, char *b, int siz);
+void test__pstrs(char *msg, char *a, char *b);
 int  test_str_eq(char *a, char *b);
 
 extern TestState test__;         /* Global warning  ^u^  */
-       TestState test__ = {0, 0, 0, {0}, TEST_OPT__, NULL, {NULL}, {NULL}};
+TestState test__ = {0, 0, 0, 0, {0}, TEST_OPT__, NULL, {NULL}, {NULL}};
 
 /* Runs all tests defined with TEST macro.  Program returns number of
  * failed tests or 0 on success. */
@@ -157,8 +169,6 @@ main(int argc, char **argv)
 			test__usage(argv[0]);
 			return 0;                   /* End here */
 		case 'v':
-			/* TODO(irek): Implement.*/
-			fprintf(stderr, "WARN: -v is not yet implemented\n");
 			test__.opt |= TEST_OPT_V;
 			break;
 		case 'q':
@@ -181,16 +191,24 @@ main(int argc, char **argv)
 
 	/* Run tests.  Print error on fail. */
 	for (i = 0; i < test__.all; i++) {
+		test__.sum = 0;
 		test__.fail = 0;
-		(*test__.its[i])();    /* Run */
+		(*test__.its[i])();   /* Run, print assertion fails */
 
-		if (test__.fail == 0)
-			continue;      /* Pass */
+		if (test__.fail) {
+			test__.err++;
+			fprintf(stderr, "%s:%lu: error: TEST %s\n",
+				test__.fname, test__.line[i], test__.msg[i]);
+			assert(test__.err <= test__.all);
+		}
 
-		test__.err++;	       /* Fail */
-		fprintf(stderr, "%s:%lu: error: TEST %s\n",
-			test__.fname, test__.line[i], test__.msg[i]);
-		assert(test__.err <= test__.all);
+		/* Print test message in verbose mode. */
+		if (TEST__FLAG(test__.opt, TEST_OPT_V)) {
+			printf("%.2lu pass    %.2lu fail    %s\n",
+			       test__.sum - test__.fail,
+			       test__.fail,
+			       test__.msg[i]);
+		}
 	}
 
 	/* Print results summary */
@@ -222,6 +240,24 @@ void
 test__init(char *fname)
 {
 	test__.fname = fname;
+}
+
+/* Print to stderr MSG message with buffers A and B of given SIZ size
+ * in separate lines to make differences easily visible. */
+void
+test__pbufs(char *msg, char *a, char *b, int siz)
+{
+	fprintf(stderr, "%s:\n\t'%-*s'\n\t'%-*s'",
+		msg, siz, a, siz, b);
+}
+
+/* Print to stderr MSG message with strings A and B in separate lines
+ * to make differences easily visible. */
+void
+test__pstrs(char *msg, char *a, char *b)
+{
+	fprintf(stderr, "%s:\n\t'%s'\n\t'%s'",
+		msg, a ? a : "<NULL>", b ? b : "<NULL>");
 }
 
 /* Check if given strings A and B are equal or both are NULL. */

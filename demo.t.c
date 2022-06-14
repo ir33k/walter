@@ -12,7 +12,8 @@ TEST("Test strings")
 {
 	STR_EQ("Lorem ipsum", "Lorem ipsum");
 	STR_EQ(NULL, NULL);
-	/* STR_NOT_EQ("Lorem ipsum", NULL); */
+	STR_NOT_EQ("Lorem ipsum", NULL);
+	STR_EQ("Lorem aapsum", "Lorem ipsum"); /* Fail */
 }
 
 TEST("Multiple fails")
@@ -36,7 +37,7 @@ TEST("Should fail")
 TEST("Make it pass no matter what")
 {
 	OK(1);
-	PASS();			/* Pass at this point, ignore rest */
+	END();			/* End at this point, ignore rest */
 	FAIL("ignored");
 	FAIL("ignored");
 }
