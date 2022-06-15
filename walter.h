@@ -1,7 +1,7 @@
-/* Walter is a single header library made with fewer complications for
- * writing unit tests in C.
+/* Walter is a single header library for writing unit tests in C made
+ * with fewer complications.
  *
- * v1.0 from https://github.com/ir33k/walter by irek (public domain)
+ * v1.0 from https://github.com/ir33k/walter by Irek (public domain)
  *
  * Example test program:
  *
@@ -13,6 +13,9 @@
  *	{
  *		FAIL("fail message");   // Fail here with message
  *		END();                  // End test here
+ *
+ *		// TODO(irek): Implement helper functions for creating
+ *		// custom assertions.
  *
  *		OK(bool);               // Is boolean true?
  *		EQ(num1, num2);         // Are numbers equal?
@@ -32,7 +35,6 @@
  *
  *	TEST("Another test 1") { ... }  // Define as many as TESTMAX
  *	TEST("Another test 2") { ... }
- *	TEST("Another test 3") { ... }
  *
  *	// There is no "main" function
  *
@@ -42,7 +44,7 @@
  *	$ ./example.t -h                # Print usage help
  *	$ ./example.t                   # Run tests
  *	$ ./example.t -v                # Run in verbose mode
- *	$ ./example.t -q                # End on first fail
+ *	$ ./example.t -q                # End quick on first fail
  *	$ ./example.t -vq               # Captain obvious
  *
  * Can be included only in one test program because it has single
@@ -67,7 +69,7 @@
 #define TESTMAX    64		/* Maximum number of tests */
 #endif
 
-/* Return true if number N is set with a F flag. */
+/* Return true if number N is set with an F flag. */
 #define TEST__FLAG(n,f) ((n & f) == f)
 
 #define TEST____(_msg, id, _line)                               \
@@ -112,18 +114,18 @@
 
 /* Main assertions */
 #define ASSERT(x,msg) ASSERT__(x, fputs(msg, stderr))
-#define OK(x) ASSERT(x, "'"#x"' not ok")
-#define EQ(a,b) ASSERT((a) == (b), "'"#a"' not equal to '"#b"'")
+#define OK(x) ASSERT(x, "'"#x"' is not ok")
+#define EQ(a,b) ASSERT((a) == (b), "'"#a"' is not equal to '"#b"'")
 #define STR_EQ(a,b) ASSERT__(test_str_eq(a, b),			\
-			     test__pstrs("not equal", a, b))
+			     test__pstrs("strings are not equal", a, b))
 #define BUF_EQ(a,b,n) ASSERT__(strncmp(a, b, n) == 0,			\
-			       test__pbufs("not equal", a, b, n))
+			       test__pbufs("buffers are not equal", a, b, n))
 /* Negations */
-#define NOT_EQ(a,b) ASSERT((a) != (b), "'"#a"' equal to '"#b"'")
+#define NOT_EQ(a,b) ASSERT((a) != (b), "'"#a"' number is equal to '"#b"'")
 #define STR_NOT_EQ(a,b) ASSERT__(!test_str_eq(a, b),		\
-				 test__pstrs("equal", a, b))
+				 test__pstrs("strings are equal", a, b))
 #define BUF_NOT_EQ(a,b,n) ASSERT__(strncmp(a, b, n) != 0,		\
-				   test__pbufs("equal", a, b, n))
+				   test__pbufs("buffers are equal", a, b, n))
 /* Flow control */
 #define FAIL(msg) ASSERT(0, msg)
 #define END() do { return; } while(0)
@@ -167,7 +169,7 @@ main(int argc, char **argv)
 		switch(opt) {
 		case 'h':
 			test__usage(argv[0]);
-			return 0;                   /* End here */
+			return 0;
 		case 'v':
 			test__.opt |= TEST_OPT_V;
 			break;
