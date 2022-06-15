@@ -132,7 +132,7 @@
 
 typedef enum {
 	TEST_OPT__ = 0,		/* Nothing */
-	TEST_OPT_V = 1 << 0,	/* Verbouse mode */
+	TEST_OPT_V = 1 << 0,	/* Verbose mode */
 	TEST_OPT_Q = 1 << 1	/* Quick mode */
 } TestOpt;
 
@@ -230,7 +230,7 @@ test__usage(char *argv0)
 {
 	printf("usage: %s [-hvq]\n\n"
 	       "\t-h\tPrints this help usage message.\n"
-	       "\t-v\tRun in verbouse mode.\n"
+	       "\t-v\tRun in verbose mode.\n"
 	       "\t-q\tStop current test on first fail.\n",
 	       argv0);
 }
