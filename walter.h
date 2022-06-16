@@ -1,7 +1,7 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications.
  *
- * v1.0 from https://github.com/ir33k/walter by Irek (public domain)
+ * v1.1 from https://github.com/ir33k/walter by Irek (public domain)
  *
  * Example test program:
  *
@@ -20,9 +20,9 @@
  *		FAIL("fail message");   // Fail here with message
  *		END();                  // End test here
  *
- *		DIF(num1, num2);        // Are numbers different?
- *		STR_DIF(s1, s2);        // Are strings different?
- *		BUF_DIF(b1, b2, size);  // Are buffers different?
+ *		NEQ(num1, num2);        // Are numbers not equal?
+ *		STR_NEQ(s1, s2);        // Are strings not equal?
+ *		BUF_NEQ(b1, b2, size);  // Are buffers not equal?
  *	}
  *
  *	TEST("Another test 1") { ... }  // Define as many as TESTMAX
@@ -121,9 +121,9 @@
 					"\t'%.*s'\n\t'%.*s'",		\
 					#a, #b, #n,			\
 					(int)n, a, (int)n, b))
-#define DIF(a,b)       ASSERT((a) != (b), "DIF("#a", "#b")")
-#define STR_DIF(a,b)   ASSERT(!__STR_EQ(a,b), "STR_DIF("#a", "#b")")
-#define BUF_DIF(a,b,n) ASSERT(!__BUF_EQ(a,b,n), "BUF_DIF("#a", "#b", "#n")")
+#define NEQ(a,b)       ASSERT((a) != (b), "NEQ("#a", "#b")")
+#define STR_NEQ(a,b)   ASSERT(!__STR_EQ(a,b), "STR_NEQ("#a", "#b")")
+#define BUF_NEQ(a,b,n) ASSERT(!__BUF_EQ(a,b,n), "BUF_NEQ("#a", "#b", "#n")")
 #define FAIL(msg)      ASSERT(0, msg)
 #define END()          do { return; } while(0)
 

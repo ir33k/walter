@@ -25,13 +25,13 @@ TEST("numbers")
 	int      num = 123;
 	double  fnum = 0.1 + 0.2;
 
-	DIF(123, 123);
-	DIF(num, 123);
-	DIF(num, num);
+	NEQ(123, 123);
+	NEQ(num, 123);
+	NEQ(num, num);
 
-	DIF(1.23, 1.23);
-	DIF(fnum, 0.1 + 0.2);
-	DIF(fnum, fnum);
+	NEQ(1.23, 1.23);
+	NEQ(fnum, 0.1 + 0.2);
+	NEQ(fnum, fnum);
 
 	EQ(123, 456);
 	EQ(num, 456);
@@ -45,10 +45,10 @@ TEST("strings")
 {
 	char  *str = "Lorem ipsum";
 
-	STR_DIF("Lorem ipsum", "Lorem ipsum");
-	STR_DIF(str, "Lorem ipsum");
-	STR_DIF(str, str);
-	STR_DIF(NULL, NULL);
+	STR_NEQ("Lorem ipsum", "Lorem ipsum");
+	STR_NEQ(str, "Lorem ipsum");
+	STR_NEQ(str, str);
+	STR_NEQ(NULL, NULL);
 
 	STR_EQ(str, NULL);
 	STR_EQ("Lorem ipsum", NULL);
@@ -62,11 +62,11 @@ TEST("buffers")
 
 	strncpy(buf, str, 16);
 
-	BUF_DIF("Lorem ipsum", "Lorem ipsum", 10);
-	BUF_DIF(str, str, strlen(str));
-	BUF_DIF(buf, buf, 16);
-	BUF_DIF(buf, buf, 4);
-	BUF_DIF(buf, str, 4);
+	BUF_NEQ("Lorem ipsum", "Lorem ipsum", 10);
+	BUF_NEQ(str, str, strlen(str));
+	BUF_NEQ(buf, buf, 16);
+	BUF_NEQ(buf, buf, 4);
+	BUF_NEQ(buf, str, 4);
 
 	BUF_EQ("Lorem ipsum", "Lorem  psum", 10);
 	BUF_EQ(str, "Lorem ipsum", 8);

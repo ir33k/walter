@@ -17,9 +17,9 @@ TEST("All should pass")		/* Define test with assertions */
 	STR_EQ(str, "David");	/* Are strings equal? */
 	BUF_EQ(buf, "0045", 4);	/* Are buffers equal? */
 
-	DIF(num, 22);		/* Are numbers different? */
-	STR_DIF(str, "Walter");	/* Are strings different? */
-	BUF_DIF(buf, "123", 3);	/* Are buffers different? */
+	NEQ(num, 22);		/* Are numbers not equal? */
+	STR_NEQ(str, "Walter");	/* Are strings not equal? */
+	BUF_NEQ(buf, "123", 3);	/* Are buffers not equal? */
 
 	END();			/* Force test to end here */
 	FAIL("Fail message");	/* Force fail in this line */
@@ -31,9 +31,9 @@ TEST("You shall not pass!")	/* All should fail */
 	EQ(0.1 + 0.2, 0.3);
 	STR_EQ("Lorem ipsum", "Lorem ipusm");
 	BUF_EQ("2345", "0045", 4);
-	DIF(44, 44);
-	STR_DIF("Lorem ipsum", "Lorem ipsum");
-	BUF_DIF("1234", "1234", 4);
+	NEQ(44, 44);
+	STR_NEQ("Lorem ipsum", "Lorem ipsum");
+	BUF_NEQ("1234", "1234", 4);
 	ASSERT(0, "Custom fail message");
 }
 
