@@ -111,13 +111,15 @@
 #define EQ(a,b)        ASSERT((a) == (b), "EQ("#a", "#b")")
 #define STR_EQ(a,b)    __ASSERT(__STR_EQ(a,b),				\
 				fprintf(stderr,				\
-					"STR_EQ("#a", "#b")\n"		\
+					"STR_EQ(%s, %s)\n"		\
 					"\t'%s'\n\t'%s'",		\
+					#a, #b,				\
 					a ? a : "<NULL>", b ? b : "<NULL>"))
 #define BUF_EQ(a,b,n)  __ASSERT(__BUF_EQ(a,b,n),			\
 				fprintf(stderr,				\
-					"BUF_EQ("#a", "#b", "#n")\n"	\
+					"BUF_EQ(%s, %s, %s)\n"		\
 					"\t'%.*s'\n\t'%.*s'",		\
+					#a, #b, #n,			\
 					(int)n, a, (int)n, b))
 #define DIF(a,b)       ASSERT((a) != (b), "DIF("#a", "#b")")
 #define STR_DIF(a,b)   ASSERT(!__STR_EQ(a,b), "STR_DIF("#a", "#b")")
