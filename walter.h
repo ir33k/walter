@@ -69,9 +69,6 @@
 #define TESTMAX    64		/* Maximum number of tests */
 #endif
 
-/* Return true if number N is set with an F flag. */
-#define TEST__FLAG(n,f) ((n & f) == f)
-
 #define TEST____(_msg, id, _line)                               \
 	void test__body##id(void);                              \
 	/* This function will be run before "main" function.  It's the
@@ -101,20 +98,19 @@
 		test__.sum++;					\
 		if (bool) break;            /* Pass */		\
 		test__.fail++;              /* Fail */		\
-		if (test__.fail == 1) putchar('\n');		\
 		fprintf(stderr, "%s:%d: error: ",		\
 			test__.fname, line);			\
 		onfail;                                         \
 		fputc('\n', stderr);                            \
 		/* In -q quick mode stop test on first fail*/	\
-		if (TEST__FLAG(test__.opt, TEST_OPT_Q))		\
-			return;					\
+		if (test__.quick) return;			\
 	} while(0)
 #define ASSERT__(bool, onfail) ASSERT____(bool, onfail, __LINE__)
 
 /* Main assertions */
 #define ASSERT(x,msg) ASSERT__(x, fputs(msg, stderr))
 #define OK(x) ASSERT(x, "'"#x"' is not ok")
+/* TODO(irek): Print actuall numbers. */
 #define EQ(a,b) ASSERT((a) == (b), "'"#a"' is not equal to '"#b"'")
 #define STR_EQ(a,b) ASSERT__(test_str_eq(a, b),			\
 			     test__pstrs("strings are not equal", a, b))
@@ -130,22 +126,17 @@
 #define FAIL(msg) ASSERT(0, msg)
 #define END() do { return; } while(0)
 
-typedef enum {
-	TEST_OPT__ = 0,		/* Nothing */
-	TEST_OPT_V = 1 << 0,	/* Verbose mode */
-	TEST_OPT_Q = 1 << 1	/* Quick mode */
-} TestOpt;
-
 typedef struct {
-	size_t   all;		/* Number of all tests */
-	size_t   err;		/* Number of failed tests */
-	size_t   sum;		/* Last test assertions count */
-	size_t   fail;		/* Last failed assertions count */
-	size_t   line[TESTMAX]; /* TEST macros line in file */
-	TestOpt  opt;		/* Option flags with test modes */
-	char    *fname;		/* Test source file name */
-	char    *msg[TESTMAX];	/* TEST macro messages */
-	void   (*its[TESTMAX])(void); /* Test functions pointers */
+	int    all;		    /* Number of all tests */
+	int    err;		    /* Number of failed tests */
+	int    sum;		    /* Last test assertions count */
+	int    fail;		    /* Last failed assertions count */
+	int    line[TESTMAX];	    /* TEST macros line in file */
+	int    verb;		    /* True if verbose mode enabled */
+	int    quick;		    /* True if quick mode enabled */
+	char  *fname;		    /* Test source file name */
+	char  *msg[TESTMAX];	    /* TEST macro messages */
+	void (*its[TESTMAX])(void); /* Test functions pointers */
 } TestState;
 
 void test__usage(char *argv0);
@@ -155,14 +146,14 @@ void test__pstrs(char *msg, char *a, char *b);
 int  test_str_eq(char *a, char *b);
 
 extern TestState test__;         /* Global warning  ^u^  */
-TestState test__ = {0, 0, 0, 0, {0}, TEST_OPT__, NULL, {NULL}, {NULL}};
+TestState test__ = {0, 0, 0, 0, {0}, 0, 0, NULL, {NULL}, {NULL}};
 
 /* Runs all tests defined with TEST macro.  Program returns number of
  * failed tests or 0 on success. */
 int
 main(int argc, char **argv)
 {
-	size_t  i;
+	int     i;
 	char    opt;
 
 	while ((opt = getopt(argc, argv, "hvq")) != -1) {
@@ -171,10 +162,10 @@ main(int argc, char **argv)
 			test__usage(argv[0]);
 			return 0;
 		case 'v':
-			test__.opt |= TEST_OPT_V;
+			test__.verb = 1;
 			break;
 		case 'q':
-			test__.opt |= TEST_OPT_Q;
+			test__.quick = 1;
 			break;
 		default:
 			test__usage(argv[0]);
@@ -199,27 +190,26 @@ main(int argc, char **argv)
 
 		if (test__.fail) {
 			test__.err++;
-			fprintf(stderr, "%s:%lu: error: TEST %s\n",
+			fprintf(stderr, "%s:%d: error: TEST %s\n",
 				test__.fname, test__.line[i], test__.msg[i]);
-			assert(test__.err <= test__.all);
 		}
-
-		/* Print test message in verbose mode. */
-		if (TEST__FLAG(test__.opt, TEST_OPT_V)) {
-			printf("%.2lu pass    %.2lu fail    %s\n",
+		if (test__.verb) {
+			printf("TEST %s\t(%d/%d) pass\n",
+			       test__.msg[i],
 			       test__.sum - test__.fail,
-			       test__.fail,
-			       test__.msg[i]);
+			       test__.sum);
 		}
 	}
 
 	/* Print results summary */
-	if (test__.err) putchar('\n');
-	printf("%-20s    %.2lu tests    %.2lu pass    %.2lu fail\n",
-	       test__.fname,
-	       test__.all,
-	       test__.all - test__.err,
-	       test__.err);
+	if (test__.verb) {
+		printf("FILE %s\t(%d/%d) pass\n",
+		       test__.fname,
+		       test__.all - test__.err,
+		       test__.all);
+	} else {
+		printf("%s\t%d err\n", test__.fname, test__.err);
+	}
 
 	return test__.err;
 }
