@@ -28,6 +28,9 @@
  *	TEST("Another test 1") { ... }  // Define as many as TESTMAX
  *	TEST("Another test 2") { ... }
  *
+ *	TODO("Another test 3") { ... }  // Mark test as TODO
+ *	TODO("Another test 4") {}       // Body can be empty
+ *
  *	// There is no "main()" function
  *
  * Compile and run:
@@ -62,7 +65,7 @@
 #define TESTMAX    64		/* Maximum number of tests */
 #endif
 
-#define ____TEST(_msg, id, _line)					\
+#define ____TEST(_msg, id, _line, _todo)				\
 	void ____test_body##id(void);					\
 	/* This function will be run before "main" function.  It's the
 	 * heart, main hack, my own precious ring of power that makes
@@ -74,6 +77,7 @@
 		__test.msg[__test.all] = _msg;				\
 		__test.line[__test.all] = _line;			\
 		__test.its[__test.all] = &____test_body##id;		\
+		__test.todo[__test.all] = _todo;			\
 		__test.all++;						\
 		if (__test.all > TESTMAX) {				\
 			fprintf(stderr, "ERROR: TESTMAX is %d (read doc)\n", \
@@ -84,13 +88,9 @@
 	void ____test_body##id(void)
 /* Intermediate macro function __TEST is necessary to "unwrap"
  * __LINE__ macro so it could be used as a ID string. */
-#define __TEST(msg, id) ____TEST(msg, id, __LINE__)
-#define TEST(msg) __TEST(msg, __LINE__)
-
-/* TODO(irek): Create pending test macro.  Call it TODO?  With that
- * number of pending tests should be shown in final summary.  Having
- * more than two number in summary make it convenient to actually show
- * number of passed tests too. */
+#define __TEST(msg, id, todo) ____TEST(msg, id, __LINE__, todo)
+#define TEST(msg) __TEST(msg, __LINE__, 0)
+#define TODO(msg) __TEST(msg, __LINE__, 1)
 
 #define ____ASSERT(bool, onfail, line) do {				\
 		__test.last_all++;					\
@@ -131,6 +131,7 @@ typedef struct {
 	int    last_all;	    /* Last test assertions count */
 	int    last_err;	    /* Last test assertions fails */
 	int    line[TESTMAX];	    /* TEST macros line in file */
+	int    todo[TESTMAX];	    /* 1 when test marked as TODO */
 	int    verb;		    /* True if verbose mode enabled */
 	int    quick;		    /* True if quick mode enabled */
 	char  *fname;		    /* Test source file name */
@@ -141,7 +142,7 @@ typedef struct {
 void __test_usage(char *argv0);
 
 extern __TestState __test;	    /* Global warning  ^u^  */
-       __TestState __test = {0, 0, 0, 0, {0}, 0, 0, NULL, {NULL}, {NULL}};
+__TestState __test = {0, 0, 0, 0, {0}, {0}, 0, 0, NULL, {NULL}, {NULL}};
 
 /* Runs all tests defined with TEST macro.  Program returns number of
  * failed tests or 0 on success. */
@@ -164,6 +165,13 @@ main(int argc, char **argv)
 	for (i = 0; i < __test.all; i++) {
 		__test.last_all = 0;
 		__test.last_err = 0;
+
+		if (__test.todo[i]) {
+			fprintf(stderr, "%s:%d: note: TODO %s\n",
+				__test.fname, __test.line[i], __test.msg[i]);
+			continue;
+		}
+
 		(*__test.its[i])();   /* Run, print assertion fails */
 
 		if (__test.last_err) {

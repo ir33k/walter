@@ -82,4 +82,11 @@ TEST("Fail and end at the same time")
 	FAIL("Fail message");
 }
 
+TODO("Mark any test as TODO") {}
+
+TODO("Not finished or just ignored test") {
+	FAIL("Fail message");	/* Unreachable */
+	FAIL("Fail message");
+}
+
 /* There is no "main()" function. */
