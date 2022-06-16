@@ -1,7 +1,7 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications.
  *
- * v1.2 from https://github.com/ir33k/walter by Irek (public domain)
+ * v1.3 from https://github.com/ir33k/walter by Irek (public domain)
  *
  * Example test program:
  *
@@ -54,7 +54,6 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
-#include <assert.h>
 
 #ifndef TESTMAX			/* Predefined for more tests */
 #define TESTMAX    64		/* Maximum number of tests */
@@ -62,16 +61,14 @@
 
 #define ____TEST(_msg, id, _line, _todo)				\
 	void ____test_body##id(void);					\
-	/* This function will be run before "main" function.  It's the
-	 * heart, main hack, my own precious ring of power that makes
-	 * this test lib possible. */					\
+	/* This function will be run before "main" function. */		\
 	void ____test##id(void) __attribute__ ((constructor));		\
 	void ____test##id(void) {					\
 		/* Init on first TEST(). */				\
 		if (__test.all == 0) __test.fname = __FILE__;		\
+		__test.its[__test.all] = &____test_body##id;		\
 		__test.msg[__test.all] = _msg;				\
 		__test.line[__test.all] = _line;			\
-		__test.its[__test.all] = &____test_body##id;		\
 		__test.todo[__test.all] = _todo;			\
 		__test.all++;						\
 		if (__test.all > TESTMAX) {				\
@@ -94,32 +91,32 @@
 		fprintf(stderr, "%s:%d: warning: ", __test.fname, line); \
 		onfail;							\
 		fputc('\n', stderr);					\
-		/* In -q quick mode stop test on first fail */		\
-		if (__test.quick) return;				\
+		if (__test.quick) return; /* Stop on first fail */	\
 	} while(0)
 #define __ASSERT(bool, onfail) ____ASSERT(bool, onfail, __LINE__)
 #define __STR_EQ(a,b) ((a && b && strcmp(a?a:"", b?b:"") == 0) || (!a && !b))
 #define __BUF_EQ(a,b,n) (strncmp(a,b,n) == 0)
 
-#define ASSERT(x,m)    __ASSERT(x, fputs(m, stderr))
-#define OK(x)          ASSERT(x, "OK("#x")")
-#define STR_EQ(a,b)    __ASSERT(__STR_EQ(a,b),				\
-				fprintf(stderr,				\
-					"STR_EQ(%s, %s)\n"		\
-					"\t'%s'\n\t'%s'",		\
-					#a, #b,				\
-					a ? a : "<NULL>", b ? b : "<NULL>"))
-#define BUF_EQ(a,b,n)  __ASSERT(__BUF_EQ(a,b,n),			\
-				fprintf(stderr,				\
-					"BUF_EQ(%s, %s, %s)\n"		\
-					"\t'%.*s'\n\t'%.*s'",		\
-					#a, #b, #n,			\
-					(int)n, a, (int)n, b))
-#define STR_NEQ(a,b)   ASSERT(!__STR_EQ(a,b), "STR_NEQ("#a", "#b")")
+#define ASSERT(x,m) __ASSERT(x, fputs(m, stderr))
+#define OK(x) ASSERT(x, "OK("#x")")
+#define STR_EQ(a,b) __ASSERT(__STR_EQ(a,b),				\
+			     fprintf(stderr,				\
+				     "STR_EQ(%s, %s)\n"			\
+				     "\t'%s'\n\t'%s'",			\
+				     #a, #b,				\
+				     a ? a : "<NULL>", b ? b : "<NULL>"))
+#define BUF_EQ(a,b,n) __ASSERT(__BUF_EQ(a,b,n),				\
+			       fprintf(stderr,				\
+				       "BUF_EQ(%s, %s, %s)\n"		\
+				       "\t'%.*s'\n\t'%.*s'",		\
+				       #a, #b, #n,			\
+				       (int)n, a, (int)n, b))
+#define STR_NEQ(a,b) ASSERT(!__STR_EQ(a,b), "STR_NEQ("#a", "#b")")
 #define BUF_NEQ(a,b,n) ASSERT(!__BUF_EQ(a,b,n), "BUF_NEQ("#a", "#b", "#n")")
-#define END()          do { return; } while(0)
+#define END() do { return; } while(0)
 
-typedef struct {
+/* Tests global state. */
+struct {
 	int    all;		    /* Number of all tests */
 	int    err;		    /* Number of failed tests */
 	int    last_all;	    /* Last test assertions count */
@@ -131,12 +128,7 @@ typedef struct {
 	char  *fname;		    /* Test source file name */
 	char  *msg[TESTMAX];	    /* TEST macro messages */
 	void (*its[TESTMAX])(void); /* Test functions pointers */
-} __TestState;
-
-void __test_usage(char *argv0);
-
-extern __TestState __test;	    /* Global warning  ^u^  */
-__TestState __test = {0, 0, 0, 0, {0}, {0}, 0, 0, NULL, {NULL}, {NULL}};
+} __test = {0, 0, 0, 0, {0}, {0}, 0, 0, NULL, {NULL}, {NULL}};
 
 /* Runs all tests defined with TEST macro.  Program returns number of
  * failed tests or 0 on success. */
@@ -150,22 +142,27 @@ main(int argc, char **argv)
 		switch(opt) {
 		case 'v': __test.verb  = 1; break;
 		case 'q': __test.quick = 1; break;
-		case 'h': __test_usage(argv[0]); return 0;
-		default:  __test_usage(argv[0]); return 1;
+		case 'h':
+		default:
+			printf("usage: %s [-vqh]\n\n"
+			       "\t-v\tRun in verbose mode.\n"
+			       "\t-q\tStop current test on first fail.\n"
+			       "\t-h\tPrints this help usage message.\n",
+			       argv[0]);
+			return 1;
 		}
 	}
 
 	/* Run tests.  Print error on fail. */
 	for (i = 0; i < __test.all; i++) {
-		__test.last_all = 0;
-		__test.last_err = 0;
-
 		if (__test.todo[i]) {
 			fprintf(stderr, "%s:%d: note: TODO %s\n",
 				__test.fname, __test.line[i], __test.msg[i]);
 			continue;
 		}
 
+		__test.last_all = 0;
+		__test.last_err = 0;
 		(*__test.its[i])();   /* Run, print assertion fails */
 
 		if (__test.last_err) {
@@ -181,7 +178,7 @@ main(int argc, char **argv)
 		}
 	}
 
-	/* Print results summary */
+	/* Print results summary. */
 	if (__test.verb) {
 		printf("FILE %s\t(%d/%d) pass\n", __test.fname,
 		       __test.all - __test.err, __test.all);
@@ -190,17 +187,6 @@ main(int argc, char **argv)
 	}
 
 	return __test.err;
-}
-
-/* Print usage help message with given ARGV0 program name. */
-void
-__test_usage(char *argv0)
-{
-	printf("usage: %s [-vqh]\n\n"
-	       "\t-v\tRun in verbose mode.\n"
-	       "\t-q\tStop current test on first fail.\n"
-	       "\t-h\tPrints this help usage message.\n",
-	       argv0);
 }
 
 #endif	/* WALTER_H_ */
