@@ -25,20 +25,21 @@ TEST("numbers")
 	int      num = 123;
 	double  fnum = 0.1 + 0.2;
 
-	EQ(123, 123);
-	EQ(num, 123);
-	EQ(num, num);
+	OK(123 == 123);
+	OK(num == 123);
+	OK(num == num);
+	OK(num >= 100);
 
-	EQ(1.23, 1.23);
-	EQ(fnum, 0.1 + 0.2);
-	EQ(fnum, fnum);
+	OK(1.23 == 1.23);
+	OK(fnum == 0.1 + 0.2);
+	OK(fnum == fnum);
 
-	NEQ(123, 456);
-	NEQ(num, 456);
+	OK(123 != 456);
+	OK(num != 456);
 
-	NEQ(1.23, -1.23);
-	NEQ(0.3, 0.1 + 0.2);
-	NEQ(fnum, num);
+	OK(1.23 != -1.23);
+	OK(0.3  != 0.1 + 0.2);
+	OK(fnum != num);
 }
 
 TEST("strings")
@@ -80,5 +81,5 @@ TEST("flow")
 	OK(1);
 
 	END();
-	FAIL("Unreachable fail message");
+	ASSERT(0, "Unreachable fail message");
 }

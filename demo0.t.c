@@ -7,31 +7,28 @@
 TEST("All should pass")		/* Define test with assertions */
 {
 	int    bool    = 1;
-	int    num     = 42;
 	char  *str     = "David";
 	char   buf[4]  = { '0', '0', '4', '5' };
 
 	OK(bool);		/* Is boolean true? */
 	ASSERT(bool, "text");	/* OK() with custom message */
-	EQ(num, 42);		/* Are numbers equal? */
 	STR_EQ(str, "David");	/* Are strings equal? */
 	BUF_EQ(buf, "0045", 4);	/* Are buffers equal? */
 
-	NEQ(num, 22);		/* Are numbers not equal? */
 	STR_NEQ(str, "Walter");	/* Are strings not equal? */
 	BUF_NEQ(buf, "123", 3);	/* Are buffers not equal? */
 
 	END();			/* Force test to end here */
-	FAIL("Fail message");	/* Force fail in this line */
+	ASSERT(0, "Fail");	/* Force fail in this line */
 }
 
 TEST("You shall not pass!")	/* All should fail */
 {
 	OK(0);
-	EQ(0.1 + 0.2, 0.3);
+	OK(0.1 + 0.2 == 0.3);
+	OK(44 != 44);
 	STR_EQ("Lorem ipsum", "Lorem ipusm");
 	BUF_EQ("2345", "0045", 4);
-	NEQ(44, 44);
 	STR_NEQ("Lorem ipsum", "Lorem ipsum");
 	BUF_NEQ("1234", "1234", 4);
 	ASSERT(0, "Custom fail message");
@@ -44,11 +41,11 @@ TEST("Trigger fail at any moment")
 	OK(1);
 
 	if (1) {
-		FAIL("Fail");	/* Fail, but continue */
+		ASSERT(0, "Fail"); /* Fail and continue */
 	}
 
-	FAIL("Second fail");
-	FAIL("Third fail");
+	ASSERT(0, "Second fail");
+	ASSERT(0, "Third fail");
 }
 
 TEST("End test at any moment")
@@ -61,8 +58,8 @@ TEST("End test at any moment")
 		END();		/* End here */
 	}
 
-	FAIL("Fail message");	/* Unreachable */
-	FAIL("Fail message");
+	OK(0);			/* Unreachable */
+	OK(0);
 }
 
 TEST("Fail and end at the same time")
@@ -72,19 +69,19 @@ TEST("Fail and end at the same time")
 	OK(1);
 
 	if (1) {
-		FAIL("Fail");
+		ASSERT(0, "Fail");
 		END();
 	}
 
-	FAIL("Fail message");	/* Unreachable */
-	FAIL("Fail message");
+	OK(0);			/* Unreachable */
+	OK(0);
 }
 
 TODO("Mark any test as TODO") {}
 
 TODO("Not finished or just ignored test") {
-	FAIL("Fail message");	/* Unreachable */
-	FAIL("Fail message");
+	ASSERT(0, "Fail message"); /* Unreachable */
+	ASSERT(0, "Fail message");
 }
 
 /*

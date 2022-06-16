@@ -1,7 +1,7 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications.
  *
- * v1.1 from https://github.com/ir33k/walter by Irek (public domain)
+ * v1.2 from https://github.com/ir33k/walter by Irek (public domain)
  *
  * Example test program:
  *
@@ -13,14 +13,9 @@
  *	{
  *		OK(bool);               // Is boolean true?
  *		ASSERT(bool, "text");   // OK() with custom message
- *		EQ(num1, num2);         // Are numbers equal?
  *		STR_EQ(s1, s2);         // Are strings equal?
  *		BUF_EQ(b1, b2, size);   // Are buffers equal?
- *
- *		FAIL("fail message");   // Fail here with message
  *		END();                  // End test here
- *
- *		NEQ(num1, num2);        // Are numbers not equal?
  *		STR_NEQ(s1, s2);        // Are strings not equal?
  *		BUF_NEQ(b1, b2, size);  // Are buffers not equal?
  *	}
@@ -108,7 +103,6 @@
 
 #define ASSERT(x,m)    __ASSERT(x, fputs(m, stderr))
 #define OK(x)          ASSERT(x, "OK("#x")")
-#define EQ(a,b)        ASSERT((a) == (b), "EQ("#a", "#b")")
 #define STR_EQ(a,b)    __ASSERT(__STR_EQ(a,b),				\
 				fprintf(stderr,				\
 					"STR_EQ(%s, %s)\n"		\
@@ -121,10 +115,8 @@
 					"\t'%.*s'\n\t'%.*s'",		\
 					#a, #b, #n,			\
 					(int)n, a, (int)n, b))
-#define NEQ(a,b)       ASSERT((a) != (b), "NEQ("#a", "#b")")
 #define STR_NEQ(a,b)   ASSERT(!__STR_EQ(a,b), "STR_NEQ("#a", "#b")")
 #define BUF_NEQ(a,b,n) ASSERT(!__BUF_EQ(a,b,n), "BUF_NEQ("#a", "#b", "#n")")
-#define FAIL(msg)      ASSERT(0, msg)
 #define END()          do { return; } while(0)
 
 typedef struct {
