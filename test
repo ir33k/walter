@@ -6,3 +6,4 @@ CFLAGS="-Wall -Wextra -Wshadow -Wmissing-declarations -Wswitch-enum -pedantic -s
 $CC $CFLAGS -o demo0.t demo0.t.c && ./demo0.t
 $CC $CFLAGS -o demo1.t demo1.t.c && ./demo1.t -v
 $CC $CFLAGS -o demo2.t demo2.t.c && ./demo2.t -q
+$CC $CFLAGS -o demo3.t demo3.t.c && ./demo3.t -vq

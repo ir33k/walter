@@ -33,12 +33,12 @@ TEST("numbers")
 	EQ(fnum, 0.1 + 0.2);
 	EQ(fnum, fnum);
 
-	NOT_EQ(123, 456);
-	NOT_EQ(num, 456);
+	DIF(123, 456);
+	DIF(num, 456);
 
-	NOT_EQ(1.23, -1.23);
-	NOT_EQ(0.3, 0.1 + 0.2);
-	NOT_EQ(fnum, num);
+	DIF(1.23, -1.23);
+	DIF(0.3, 0.1 + 0.2);
+	DIF(fnum, num);
 }
 
 TEST("strings")
@@ -50,9 +50,9 @@ TEST("strings")
 	STR_EQ(str, str);
 	STR_EQ(NULL, NULL);
 
-	STR_NOT_EQ(str, NULL);
-	STR_NOT_EQ("Lorem ipsum", NULL);
-	STR_NOT_EQ("Lorem ipsum", "test");
+	STR_DIF(str, NULL);
+	STR_DIF("Lorem ipsum", NULL);
+	STR_DIF("Lorem ipsum", "test");
 }
 
 TEST("buffers")
@@ -68,9 +68,9 @@ TEST("buffers")
 	BUF_EQ(buf, buf, 4);
 	BUF_EQ(buf, str, 4);
 
-	BUF_NOT_EQ("Lorem ipsum", "Lorem  psum", 10);
-	BUF_NOT_EQ(str, "Lorem ipsum", 8);
-	BUF_NOT_EQ(buf, "Lorem ipsum", 8);
+	BUF_DIF("Lorem ipsum", "Lorem  psum", 10);
+	BUF_DIF(str, "Lorem ipsum", 8);
+	BUF_DIF(buf, "Lorem ipsum", 8);
 }
 
 TEST("flow")

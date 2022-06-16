@@ -11,32 +11,24 @@
  *
  *	TEST("Test message")            // Define test with assertions
  *	{
- *		FAIL("fail message");   // Fail here with message
- *		END();                  // End test here
- *
- *		// TODO(irek): Implement helper functions for creating
- *		// custom assertions.
- *
  *		OK(bool);               // Is boolean true?
+ *		ASSERT(bool, "text");   // OK() with custom message
  *		EQ(num1, num2);         // Are numbers equal?
  *		STR_EQ(s1, s2);         // Are strings equal?
  *		BUF_EQ(b1, b2, size);   // Are buffers equal?
  *
- *		NOT_EQ(num1, num2);     // Negations
- *		STR_NOT_EQ(s1, s2);
- *		BUF_NOT_EQ(b1, b2, size);
+ *		FAIL("fail message");   // Fail here with message
+ *		END();                  // End test here
  *
- *		// ASSERT is like OK but with custom fail message
- *		ASSERT(bool, "fail message");
- *
- *		// Helper function that returns boolean
- *		OK(test_str_eq(str1, str2));
+ *		DIF(num1, num2);        // Are numbers different?
+ *		STR_DIF(s1, s2);        // Are strings different?
+ *		BUF_DIF(b1, b2, size);  // Are buffers different?
  *	}
  *
  *	TEST("Another test 1") { ... }  // Define as many as TESTMAX
  *	TEST("Another test 2") { ... }
  *
- *	// There is no "main" function
+ *	// There is no "main()" function
  *
  * Compile and run:
  *
@@ -61,6 +53,7 @@
 #define WALTER_H_
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
 #include <assert.h>
@@ -69,84 +62,86 @@
 #define TESTMAX    64		/* Maximum number of tests */
 #endif
 
-#define TEST____(_msg, id, _line)                               \
-	void test__body##id(void);                              \
+#define ____TEST(_msg, id, _line)					\
+	void ____test_body##id(void);					\
 	/* This function will be run before "main" function.  It's the
 	 * heart, main hack, my own precious ring of power that makes
-	 * this test lib possible. */                           \
-	void test__##id(void) __attribute__ ((constructor));    \
-	void test__##id(void) {                                 \
-		if (test__.all == 0) test__init(__FILE__);      \
-		test__.msg[test__.all] = _msg;                  \
-		test__.line[test__.all] = _line;                \
-		test__.its[test__.all] = &test__body##id;       \
-		test__.all++;                                   \
-	}                                                       \
-	void test__body##id(void)
-/* Intermediate macro function TEST__ is necessary to "unwrap"
+	 * this test lib possible. */					\
+	void ____test##id(void) __attribute__ ((constructor));		\
+	void ____test##id(void) {					\
+		/* Init on first TEST(). */				\
+		if (__test.all == 0) __test.fname = __FILE__;		\
+		__test.msg[__test.all] = _msg;				\
+		__test.line[__test.all] = _line;			\
+		__test.its[__test.all] = &____test_body##id;		\
+		__test.all++;						\
+		if (__test.all > TESTMAX) {				\
+			fprintf(stderr, "ERROR: TESTMAX is %d (read doc)\n", \
+				TESTMAX);				\
+			exit(1);					\
+		}							\
+	}								\
+	void ____test_body##id(void)
+/* Intermediate macro function __TEST is necessary to "unwrap"
  * __LINE__ macro so it could be used as a ID string. */
-#define TEST__(msg, id) TEST____(msg, id, __LINE__)
-#define TEST(msg) TEST__(msg, __LINE__)
+#define __TEST(msg, id) ____TEST(msg, id, __LINE__)
+#define TEST(msg) __TEST(msg, __LINE__)
 
 /* TODO(irek): Create pending test macro.  Call it TODO?  With that
  * number of pending tests should be shown in final summary.  Having
  * more than two number in summary make it convenient to actually show
  * number of passed tests too. */
 
-/* Assertions */
-#define ASSERT____(bool, onfail, line) do {                     \
-		test__.sum++;					\
-		if (bool) break;            /* Pass */		\
-		test__.fail++;              /* Fail */		\
-		fprintf(stderr, "%s:%d: error: ",		\
-			test__.fname, line);			\
-		onfail;                                         \
-		fputc('\n', stderr);                            \
-		/* In -q quick mode stop test on first fail*/	\
-		if (test__.quick) return;			\
+#define ____ASSERT(bool, onfail, line) do {				\
+		__test.last_all++;					\
+		if (bool) break;                /* Pass */		\
+		__test.last_err++;              /* Fail */		\
+		fprintf(stderr, "%s:%d: warning: ", __test.fname, line); \
+		onfail;							\
+		fputc('\n', stderr);					\
+		/* In -q quick mode stop test on first fail */		\
+		if (__test.quick) return;				\
 	} while(0)
-#define ASSERT__(bool, onfail) ASSERT____(bool, onfail, __LINE__)
+#define __ASSERT(bool, onfail) ____ASSERT(bool, onfail, __LINE__)
+#define __STR_EQ(a,b) ((a && b && strcmp(a?a:"", b?b:"") == 0) || (!a && !b))
+#define __BUF_EQ(a,b,n) (strncmp(a,b,n) == 0)
 
-/* Main assertions */
-#define ASSERT(x,msg) ASSERT__(x, fputs(msg, stderr))
-#define OK(x) ASSERT(x, "'"#x"' is not ok")
-/* TODO(irek): Print actuall numbers. */
-#define EQ(a,b) ASSERT((a) == (b), "'"#a"' is not equal to '"#b"'")
-#define STR_EQ(a,b) ASSERT__(test_str_eq(a, b),			\
-			     test__pstrs("strings are not equal", a, b))
-#define BUF_EQ(a,b,n) ASSERT__(strncmp(a, b, n) == 0,			\
-			       test__pbufs("buffers are not equal", a, b, n))
-/* Negations */
-#define NOT_EQ(a,b) ASSERT((a) != (b), "'"#a"' number is equal to '"#b"'")
-#define STR_NOT_EQ(a,b) ASSERT__(!test_str_eq(a, b),		\
-				 test__pstrs("strings are equal", a, b))
-#define BUF_NOT_EQ(a,b,n) ASSERT__(strncmp(a, b, n) != 0,		\
-				   test__pbufs("buffers are equal", a, b, n))
-/* Flow control */
-#define FAIL(msg) ASSERT(0, msg)
-#define END() do { return; } while(0)
+#define ASSERT(x,m)    __ASSERT(x, fputs(m, stderr))
+#define OK(x)          ASSERT(x, "OK("#x")")
+#define EQ(a,b)        ASSERT((a) == (b), "EQ("#a", "#b")")
+#define STR_EQ(a,b)    __ASSERT(__STR_EQ(a,b),				\
+				fprintf(stderr,				\
+					"STR_EQ("#a", "#b")\n"		\
+					"\t'%s'\n\t'%s'",		\
+					a ? a : "<NULL>", b ? b : "<NULL>"))
+#define BUF_EQ(a,b,n)  __ASSERT(__BUF_EQ(a,b,n),			\
+				fprintf(stderr,				\
+					"BUF_EQ("#a", "#b", "#n")\n"	\
+					"\t'%.*s'\n\t'%.*s'",		\
+					(int)n, a, (int)n, b))
+#define DIF(a,b)       ASSERT((a) != (b), "DIF("#a", "#b")")
+#define STR_DIF(a,b)   ASSERT(!__STR_EQ(a,b), "STR_DIF("#a", "#b")")
+#define BUF_DIF(a,b,n) ASSERT(!__BUF_EQ(a,b,n), "BUF_DIF("#a", "#b", "#n")")
+#define FAIL(msg)      ASSERT(0, msg)
+#define END()          do { return; } while(0)
 
 typedef struct {
 	int    all;		    /* Number of all tests */
 	int    err;		    /* Number of failed tests */
-	int    sum;		    /* Last test assertions count */
-	int    fail;		    /* Last failed assertions count */
+	int    last_all;	    /* Last test assertions count */
+	int    last_err;	    /* Last test assertions fails */
 	int    line[TESTMAX];	    /* TEST macros line in file */
 	int    verb;		    /* True if verbose mode enabled */
 	int    quick;		    /* True if quick mode enabled */
 	char  *fname;		    /* Test source file name */
 	char  *msg[TESTMAX];	    /* TEST macro messages */
 	void (*its[TESTMAX])(void); /* Test functions pointers */
-} TestState;
+} __TestState;
 
-void test__usage(char *argv0);
-void test__init(char *fname);
-void test__pbufs(char *msg, char *a, char *b, int siz);
-void test__pstrs(char *msg, char *a, char *b);
-int  test_str_eq(char *a, char *b);
+void __test_usage(char *argv0);
 
-extern TestState test__;         /* Global warning  ^u^  */
-TestState test__ = {0, 0, 0, 0, {0}, 0, 0, NULL, {NULL}, {NULL}};
+extern __TestState __test;	    /* Global warning  ^u^  */
+       __TestState __test = {0, 0, 0, 0, {0}, 0, 0, NULL, {NULL}, {NULL}};
 
 /* Runs all tests defined with TEST macro.  Program returns number of
  * failed tests or 0 on success. */
@@ -156,107 +151,54 @@ main(int argc, char **argv)
 	int     i;
 	char    opt;
 
-	while ((opt = getopt(argc, argv, "hvq")) != -1) {
+	while ((opt = getopt(argc, argv, "vqh")) != -1) {
 		switch(opt) {
-		case 'h':
-			test__usage(argv[0]);
-			return 0;
-		case 'v':
-			test__.verb = 1;
-			break;
-		case 'q':
-			test__.quick = 1;
-			break;
-		default:
-			test__usage(argv[0]);
-			return 1;
+		case 'v': __test.verb  = 1; break;
+		case 'q': __test.quick = 1; break;
+		case 'h': __test_usage(argv[0]); return 0;
+		default:  __test_usage(argv[0]); return 1;
 		}
-	}
-
-	/* TODO(irek): This should probably be done inside TEST macro.
-	 * I'm not sure who program will react to exit(1) outside of
-	 * "main" function. */
-	if (test__.all > TESTMAX) {
-		fprintf(stderr, "ERROR: More than %d tests (read doc)\n",
-			TESTMAX);
-		return 1;
 	}
 
 	/* Run tests.  Print error on fail. */
-	for (i = 0; i < test__.all; i++) {
-		test__.sum = 0;
-		test__.fail = 0;
-		(*test__.its[i])();   /* Run, print assertion fails */
+	for (i = 0; i < __test.all; i++) {
+		__test.last_all = 0;
+		__test.last_err = 0;
+		(*__test.its[i])();   /* Run, print assertion fails */
 
-		if (test__.fail) {
-			test__.err++;
+		if (__test.last_err) {
+			__test.err++;
 			fprintf(stderr, "%s:%d: error: TEST %s\n",
-				test__.fname, test__.line[i], test__.msg[i]);
+				__test.fname, __test.line[i], __test.msg[i]);
 		}
-		if (test__.verb) {
+		if (__test.verb) {
 			printf("TEST %s\t(%d/%d) pass\n",
-			       test__.msg[i],
-			       test__.sum - test__.fail,
-			       test__.sum);
+			       __test.msg[i],
+			       __test.last_all - __test.last_err,
+			       __test.last_all);
 		}
 	}
 
 	/* Print results summary */
-	if (test__.verb) {
-		printf("FILE %s\t(%d/%d) pass\n",
-		       test__.fname,
-		       test__.all - test__.err,
-		       test__.all);
+	if (__test.verb) {
+		printf("FILE %s\t(%d/%d) pass\n", __test.fname,
+		       __test.all - __test.err, __test.all);
 	} else {
-		printf("%s\t%d err\n", test__.fname, test__.err);
+		printf("%s\t%d err\n", __test.fname, __test.err);
 	}
 
-	return test__.err;
+	return __test.err;
 }
 
 /* Print usage help message with given ARGV0 program name. */
 void
-test__usage(char *argv0)
+__test_usage(char *argv0)
 {
-	printf("usage: %s [-hvq]\n\n"
-	       "\t-h\tPrints this help usage message.\n"
+	printf("usage: %s [-vqh]\n\n"
 	       "\t-v\tRun in verbose mode.\n"
-	       "\t-q\tStop current test on first fail.\n",
+	       "\t-q\tStop current test on first fail.\n"
+	       "\t-h\tPrints this help usage message.\n",
 	       argv0);
-}
-
-/* Initialize test global state on first TEST macro.  Define FNAME
- * test file name with value of __FILE__ macro so we get source file
- * name instead of program file name like we have with argv[0]. */
-void
-test__init(char *fname)
-{
-	test__.fname = fname;
-}
-
-/* Print to stderr MSG message with buffers A and B of given SIZ size
- * in separate lines to make differences easily visible. */
-void
-test__pbufs(char *msg, char *a, char *b, int siz)
-{
-	fprintf(stderr, "%s:\n\t'%-*s'\n\t'%-*s'",
-		msg, siz, a, siz, b);
-}
-
-/* Print to stderr MSG message with strings A and B in separate lines
- * to make differences easily visible. */
-void
-test__pstrs(char *msg, char *a, char *b)
-{
-	fprintf(stderr, "%s:\n\t'%s'\n\t'%s'",
-		msg, a ? a : "<NULL>", b ? b : "<NULL>");
-}
-
-/* Check if given strings A and B are equal or both are NULL. */
-int
-test_str_eq(char *a, char *b)
-{
-	return (a && b && strcmp(a, b) == 0) || (!a && !b);
 }
 
 #endif	/* WALTER_H_ */

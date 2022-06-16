@@ -25,13 +25,13 @@ TEST("numbers")
 	int      num = 123;
 	double  fnum = 0.1 + 0.2;
 
-	NOT_EQ(123, 123);
-	NOT_EQ(num, 123);
-	NOT_EQ(num, num);
+	DIF(123, 123);
+	DIF(num, 123);
+	DIF(num, num);
 
-	NOT_EQ(1.23, 1.23);
-	NOT_EQ(fnum, 0.1 + 0.2);
-	NOT_EQ(fnum, fnum);
+	DIF(1.23, 1.23);
+	DIF(fnum, 0.1 + 0.2);
+	DIF(fnum, fnum);
 
 	EQ(123, 456);
 	EQ(num, 456);
@@ -45,10 +45,10 @@ TEST("strings")
 {
 	char  *str = "Lorem ipsum";
 
-	STR_NOT_EQ("Lorem ipsum", "Lorem ipsum");
-	STR_NOT_EQ(str, "Lorem ipsum");
-	STR_NOT_EQ(str, str);
-	STR_NOT_EQ(NULL, NULL);
+	STR_DIF("Lorem ipsum", "Lorem ipsum");
+	STR_DIF(str, "Lorem ipsum");
+	STR_DIF(str, str);
+	STR_DIF(NULL, NULL);
 
 	STR_EQ(str, NULL);
 	STR_EQ("Lorem ipsum", NULL);
@@ -62,11 +62,11 @@ TEST("buffers")
 
 	strncpy(buf, str, 16);
 
-	BUF_NOT_EQ("Lorem ipsum", "Lorem ipsum", 10);
-	BUF_NOT_EQ(str, str, strlen(str));
-	BUF_NOT_EQ(buf, buf, 16);
-	BUF_NOT_EQ(buf, buf, 4);
-	BUF_NOT_EQ(buf, str, 4);
+	BUF_DIF("Lorem ipsum", "Lorem ipsum", 10);
+	BUF_DIF(str, str, strlen(str));
+	BUF_DIF(buf, buf, 16);
+	BUF_DIF(buf, buf, 4);
+	BUF_DIF(buf, str, 4);
 
 	BUF_EQ("Lorem ipsum", "Lorem  psum", 10);
 	BUF_EQ(str, "Lorem ipsum", 8);
