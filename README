@@ -1,6 +1,10 @@
 Walter is a single header library for writing unit tests in C made
 with fewer complications.
 
+Comparing to other similar libraries this focus on minimizing tests
+setup AKA boilerplate and prints direct paths with line number to
+failed or pending tests while keeping implementation short and simple.
+
 Files:
 
 	walter.h     Library with licence and documentation
