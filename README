@@ -3,12 +3,33 @@ with fewer complications.
 
 Files:
 
-	walter.h     Library with documentation and example
+	walter.h     Library with licence and documentation
 	demo0.t.c    Simple example
 	demo1.t.c    Here all tests should pass
 	demo2.t.c    Here all tests should fail
 	demo3.t.c    Example with custom test functions
 	test         Script to compile and run demo programs
+
+Example output:
+
+	$ ./run_all_tests.sh
+	demo0.t.c:72: warning: OK(0.1 + 0.2 == 0.3)
+	demo0.t.c:65: error: TEST Example test description
+	demo0.t.c:80: note: TODO Mark any test as TODO
+	demo0.t.c:82: note: TODO Not finished or just ignored test
+	demo0.t.c	1 err
+
+	demo1.t.c	0 err
+
+	demo2.t.c	0 err
+
+	demo3.t.c:56: warning: HAS_INT(arr, 5, 5)
+	demo3.t.c:49: error: TEST Custom HAS_INT macro
+	demo3.t.c:105: warning: STARTS_WITH(str, "abc")
+		Lorem ipsum
+		abc
+	demo3.t.c:98: error: TEST Custom STARTS_WITH macro
+	demo3.t.c	2 err
 
 
 Tested on Linux and MacOS.  Contributions to make it work on Windows
