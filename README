@@ -10,15 +10,6 @@ Files:
 	demo3.t.c    Example with custom test functions
 	test         Script to compile and run demo programs
 
-Compile and run:
-
-	$ cc -o demo0.t demo0.t.c    # Compile
-	$ ./demo0.t -h               # Print usage help
-	$ ./demo0.t                  # Run tests
-	$ ./demo0.t -v               # Run in verbose mode
-	$ ./demo0.t -q               # End quick on first fail
-	$ ./demo0.t -vq              # Captain obvious
-
 
 Tested on Linux and MacOS.  Contributions to make it work on Windows
 or any other contributions are welcome but not expected.
