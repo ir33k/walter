@@ -27,7 +27,7 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications.
  *
- * v1.4 from https://github.com/ir33k/walter by Irek
+ * v1.5 from https://github.com/ir33k/walter by Irek
  *
  * Example test program:
  *
@@ -114,7 +114,7 @@
 		__test.last_all++;					\
 		if (bool) break;                /* Pass */		\
 		__test.last_err++;              /* Fail */		\
-		fprintf(stderr, "%s:%d: warning: ", __test.fname, line); \
+		fprintf(stderr, "%s:%d: warning:\t", __test.fname, line); \
 		onfail;							\
 		fputc('\n', stderr);					\
 		if (__test.quick) return; /* Stop on first fail */	\
@@ -182,7 +182,7 @@ main(int argc, char **argv)
 	/* Run tests.  Print error on fail. */
 	for (i = 0; i < __test.all; i++) {
 		if (__test.todo[i]) {
-			fprintf(stderr, "%s:%d: note: TODO %s\n",
+			fprintf(stderr, "%s:%d: note:\tTODO %s\n",
 				__test.fname, __test.line[i], __test.msg[i]);
 			continue;
 		}
@@ -193,7 +193,7 @@ main(int argc, char **argv)
 
 		if (__test.last_err) {
 			__test.err++;
-			fprintf(stderr, "%s:%d: error: TEST %s\n",
+			fprintf(stderr, "%s:%d: error:\tTEST %s\n",
 				__test.fname, __test.line[i], __test.msg[i]);
 		}
 		if (__test.verb) {
