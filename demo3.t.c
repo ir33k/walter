@@ -1,9 +1,9 @@
 /* Custom test functions and macros. */
 
-/* To create custom assertion macro use ASSERT or __ASSERT macro.
+/* To create custom assertion macro use ASSERT or WH__ASSERT macro.
  *
  *	ASSERT(boolean, message_string)
- *	__ASSERT(boolean, code_executed_on_error)
+ *	WH__ASSERT(boolean, code_executed_on_error)
  */
 
 #include <string.h>
@@ -57,8 +57,8 @@ TEST("Custom HAS_INT macro")
 }
 
 /*
- * Use __ASSERT if you want to produce complex error message.  In
- * theory you can execute any code as second __ASSERT argument.  It
+ * Use WH__ASSERT if you want to produce complex error message.  In
+ * theory you can execute any code as second WH__ASSERT argument.  It
  * will be executed after error message file path with line number is
  * printed and before terminated new line character.  It was designed
  * to execute fprintf(stderr, ...) tho.
@@ -76,8 +76,8 @@ TEST("Custom HAS_INT macro")
  * string value.
  */
 #define STARTS_WITH(str,x) \
-	__ASSERT(__starts_with(str, x), \
-		 __starts_with_print(#str, #x, str, x))
+	WH__ASSERT(__starts_with(str, x), \
+		   __starts_with_print(#str, #x, str, x))
 
 int __starts_with(char *str, char *x);
 void __starts_with_print(char *arg_str, char *arg_x, char *str, char *x);

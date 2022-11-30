@@ -77,9 +77,9 @@ TEST("Fail and end at the same time")
 	OK(0);
 }
 
-TODO("Mark any test as TODO") {}
+SKIP("Skip or mark any test as TODO") {}
 
-TODO("Not finished or just ignored test") {
+SKIP("Not finished or just ignored test") {
 	ASSERT(0, "Fail message"); /* Unreachable */
 	ASSERT(0, "Fail message");
 }

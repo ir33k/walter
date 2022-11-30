@@ -12,6 +12,7 @@ Files:
 	demo1.t.c    Here all tests should pass
 	demo2.t.c    Here all tests should fail
 	demo3.t.c    Example with custom test functions
+	demo4.t.c    Example with ONLY() test macro
 	test         Script to compile and run demo programs
 
 Example output:
@@ -19,8 +20,8 @@ Example output:
 	$ ./run_all_tests.sh
 	demo0.t.c:72: warning:	OK(0.1 + 0.2 == 0.3)
 	demo0.t.c:65: error:	TEST Example test description
-	demo0.t.c:80: note:	TODO Mark any test as TODO
-	demo0.t.c:82: note:	TODO Not finished or just ignored test
+	demo0.t.c:80: note:	SKIP Skip or mark any test as TODO
+	demo0.t.c:82: note:	SKIP Not finished or just ignored test
 	demo0.t.c	1 err
 
 	demo1.t.c	0 err
