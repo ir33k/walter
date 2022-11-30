@@ -12,6 +12,7 @@ Files:
 	demo1.t.c    Here all tests should pass
 	demo2.t.c    Here all tests should fail
 	demo3.t.c    Example with custom test functions
+	demo4.t.c    Example with ONLY() test macro
 	test         Script to compile and run demo programs
 
 Example output:
