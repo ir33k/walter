@@ -141,8 +141,7 @@ int
 main(int argc, char **argv)
 {
 	int i, opt;
-
-	while ((opt = getopt(argc, argv, "vqh")) == 0) {
+	while ((opt = getopt(argc, argv, "vqh")) != -1) {
 		switch (opt) {
 		case 'v': wh__.verb  = 1; break;
 		case 'q': wh__.quick = 1; break;
