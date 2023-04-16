@@ -1,0 +1,6 @@
+usage: ./demo0.t [-vqh]
+
+	-v	Print verbose output.
+	-q	Quick, show first fail in test.
+	-f	Fast, exit on first failed test.
+	-h	Prints this help usage message.

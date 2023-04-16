@@ -1,10 +1,8 @@
 #!/usr/bin/env sh
+# Test walter.h by checking if demos return expected result.
 
 CC="cc"
 CFLAGS="-Wall -Wextra -Wshadow -Wmissing-declarations -Wswitch-enum -pedantic -std=c89"
 
-$CC $CFLAGS -o demo0.t demo0.t.c && ./demo0.t
-$CC $CFLAGS -o demo1.t demo1.t.c && ./demo1.t -v
-$CC $CFLAGS -o demo2.t demo2.t.c && ./demo2.t -q
-$CC $CFLAGS -o demo3.t demo3.t.c && ./demo3.t -vq
-$CC $CFLAGS -o demo4.t demo4.t.c && ./demo4.t
+$CC $CFLAGS -o walter.t walter.t.c && ./walter.t
+$CC $CFLAGS -o david.t  david.t.c  && ./david.t

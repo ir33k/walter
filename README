@@ -1,41 +1,17 @@
 Walter is a single header library for writing unit tests in C made
-with fewer complications.
+with fewer complications.  David is an extension that define more
+assertion macros.
 
 Comparing to other similar libraries this focus on minimizing tests
 setup AKA boilerplate and prints direct paths with line number to
-failed or pending tests while keeping implementation short and simple.
+failed or pending tests while keeping implementation short.
+
+I would like to say that code is simple but it's mostly macro magic
+and global state.  So better hold your wizards hat while reading.
 
 Files:
 
-	walter.h     Library with licence and documentation
-	demo0.t.c    Simple example
-	demo1.t.c    Here all tests should pass
-	demo2.t.c    Here all tests should fail
-	demo3.t.c    Example with custom test functions
-	demo4.t.c    Example with ONLY() test macro
-	test         Script to compile and run demo programs
+	walter.h     Library, includes licence and documentation
+	david.h      Extra macros for walter, FILE, IO, processes
 
-Example output:
-
-	$ ./run_all_tests.sh
-	demo0.t.c:72: warning:	OK(0.1 + 0.2 == 0.3)
-	demo0.t.c:65: error:	TEST Example test description
-	demo0.t.c:80: note:	SKIP Skip or mark any test as TODO
-	demo0.t.c:82: note:	SKIP Not finished or just ignored test
-	demo0.t.c	1 err
-
-	demo1.t.c	0 err
-
-	demo2.t.c	0 err
-
-	demo3.t.c:56: warning:	HAS_INT(arr, 5, 5)
-	demo3.t.c:49: error:	TEST Custom HAS_INT macro
-	demo3.t.c:105: warning:	STARTS_WITH(str, "abc")
-		Lorem ipsum
-		abc
-	demo3.t.c:98: error:	TEST Custom STARTS_WITH macro
-	demo3.t.c	2 err
-
-
-Tested on Linux and MacOS.  Contributions to make it work on Windows
-or any other contributions are welcome but not expected.
+Should work on POSIX systems  \(._. )/
