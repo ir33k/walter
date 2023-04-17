@@ -5,4 +5,3 @@ CC="cc"
 CFLAGS="-Wall -Wextra -Wshadow -Wmissing-declarations -Wswitch-enum -pedantic -std=c89"
 
 $CC $CFLAGS -o walter.t walter.t.c && ./walter.t
-$CC $CFLAGS -o david.t  david.t.c  && ./david.t

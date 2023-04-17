@@ -1,6 +1,5 @@
 Walter is a single header library for writing unit tests in C made
-with fewer complications.  David is an extension that define more
-assertion macros.
+with fewer complications.
 
 Comparing to other similar libraries this focus on minimizing tests
 setup AKA boilerplate and prints direct paths with line number to
@@ -12,6 +11,5 @@ and global state.  So better hold your wizards hat while reading.
 Files:
 
 	walter.h     Library, includes licence and documentation
-	david.h      Extra macros for walter, FILE, IO, processes
 
-Should work on POSIX systems  \(._. )/
+Should work on POSIX systems  \(^v^ )/
