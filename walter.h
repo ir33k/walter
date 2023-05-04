@@ -5,7 +5,7 @@
  *
  * Example usage:
  *
- *	// File: example.t.c
+ *	// File: demo.t.c
  *	#define WH_MAX 1024             // Optional, number of tests
  *	#include "walter.h"             // Include test lib
  *
@@ -13,7 +13,8 @@
  *	{
  *		// Basic assertions
  *		OK(bool);               // Is boolean true?
- *		ASSERT(bool, "text");   // OK() with custom message
+ *		EQ(a, b);               // Are values equal?
+ *		ASSERT(bool, "msg");    // Print message on false
  *		STR_EQ(s1, s2);         // Are strings equal?
  *		BUF_EQ(b1, b2, size);   // Are buffers equal?
  *		END();                  // End test here
@@ -29,12 +30,12 @@
  *		// Assertion will pass if expected OUT, ERR and exit
  *		// CODE will be the equal to what CMD produce.
  *		//
- *		//   CMD           IN        OUT        ERR       CODE
- *		IOE("grep wh_",   "in.txt", "out.txt", "err.txt", 0);
- *		IOE("sed -i",     "in.txt",  NULL,      NULL,     1);
- *		IOE("./demo0.t",   NULL,    "out.txt", "err.txt", 5);
- *		IOE("ls -lh",      NULL,    "out.txt",  NULL,     0);
- *		IOE("pwd",         0,        0,         0,        0);
+ *		//   CMD          IN        OUT        ERR       CODE
+ *		IOE("grep wh_",  "in.txt", "out.txt", "err.txt", 0);
+ *		IOE("sed -i",    "in.txt",  NULL,      NULL,     1);
+ *		IOE("./demo0.t",  NULL,    "out.txt", "err.txt", 5);
+ *		IOE("ls -lh",     NULL,    "out.txt",  NULL,     0);
+ *		IOE("pwd",        0,        0,         0,        0);
  *	}
  *	TEST("Another test 1") { ... }  // Define as many as WH_MAX
  *	SKIP("Another test 2") { ... }  // Skip, ignore test
@@ -42,17 +43,13 @@
  *	SKIP("TODO test 4")    {}       // Can be used for TODOs
  *	ONLY("Another test 5") { ... }  // Ignore all other tests
  *
- *	// There is no "main()" function
+ *	// There is no "main()" function.
  *
  * Compile and run:
  *
- *	$ cc -o example.t example.t.c   # Compile
- *	$ ./example.t -h                # Print usage help
- *	$ ./example.t                   # Run tests
- *	$ ./example.t -v                # Run in verbose mode
- *	$ ./example.t -q                # Quick
- *	$ ./example.t -f                # Fast
- *	$ ./example.t -vqf              # Combain
+ *	$ cc -o demo.t demo.t.c   # Compile
+ *	$ ./dmeo.t -h             # Print usage help
+ *	$ ./dmeo.t                # Run tests
  *
  * Can be included only in one test program because it has single
  * global tests state, it defines it's own "main" function and TEST
@@ -68,7 +65,7 @@
  * just move along, this is not the code you are looking for.
  */
 #ifdef WALTER_H_
-#	error "walter.h can't be included multiple times (read doc)"
+#error "walter.h can't be included multiple times (read doc)"
 #endif
 #define WALTER_H_
 
@@ -81,11 +78,11 @@
 #include <unistd.h>
 
 #ifndef WH_MAX			/* Maximum number of TEST/SKIP/OMIT */
-#	define WH_MAX  64	/* test macros that can be handled. */
+#define WH_MAX  64		/* test macros that can be handled. */
 #endif				/* Predefine to handle more tests.  */
 
 #ifndef WH_SHOW			/* How many characters/bytes print  */
-#	define WH_SHOW 32	/* when file comperation fail, IOE. */
+#define WH_SHOW 32		/* when file comperation fail, IOE. */
 #endif				/* Predefine for different amount.  */
 
 #define WH____TEST(_msg, id, _line, _type)				\
@@ -119,8 +116,8 @@
 /* Main assertion macro that every other assertion macro use. */
 #define WH____ASSERT(bool, onfail, line) do {				\
 		wh__.last_all++;					\
-		if (bool) break;	   /* Pass */			\
-		wh__.last_err++;	   /* Fail */			\
+		if (bool) break;	/* Pass */			\
+		wh__.last_err++;	/* Fail */			\
 		fprintf(stderr, "%s:%d: warning:\t", wh__.fname, line); \
 		onfail;							\
 		fputc('\n', stderr);					\
@@ -135,6 +132,7 @@
 /* Basic assertions. */
 #define ASSERT(x,msg) WH__ASSERT(x, fputs(msg, stderr))
 #define OK(x) ASSERT(x, "OK("#x")")
+#define EQ(a,b) ASSERT((a) == (b), "EQ("#a", "#b")")
 #define STR_EQ(a,b) WH__ASSERT(WH__STR_EQ(a,b),				\
 			       fprintf(stderr, "STR_EQ(%s, %s)\n"	\
 				       "\t'%s'\n\t'%s'",		\
@@ -145,7 +143,7 @@
 					 "\t'%.*s'\n\t'%.*s'",		\
 					 #a, #b, #n,			\
 					 (int)n, a, (int)n, b))
-#define STR_NEQ(a,b) ASSERT(!WH__STR_EQ(a,b), "STR_NEQ("#a", "#b")")
+#define STR_NEQ(a,b)   ASSERT(!WH__STR_EQ(a,b),   "STR_NEQ("#a", "#b")")
 #define BUF_NEQ(a,b,n) ASSERT(!WH__BUF_EQ(a,b,n), "BUF_NEQ("#a", "#b", "#n")")
 
 /* Force end of test block. */
