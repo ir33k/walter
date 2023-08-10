@@ -1,0 +1,22 @@
+demo0.t.c:27:	OK(0)
+demo0.t.c:28:	OK(0.1 + 0.2 == 0.3)
+demo0.t.c:29:	OK(44 != 44)
+demo0.t.c:30:	STR_EQ("Lorem ipsum", "Lorem ipusm")
+	'Lorem ipsum'
+	'Lorem ipusm'
+demo0.t.c:31:	BUF_EQ("2345", "0045", 4)
+	'2345'
+	'0045'
+demo0.t.c:32:	STR_NEQ("Lorem ipsum", "Lorem ipsum")
+demo0.t.c:33:	BUF_NEQ("1234", "1234", 4)
+demo0.t.c:34:	Custom fail message
+demo0.t.c:25:	TEST You shall not pass!
+demo0.t.c:44:	Fail
+demo0.t.c:47:	Second fail
+demo0.t.c:48:	Third fail
+demo0.t.c:37:	TEST Trigger fail at any moment
+demo0.t.c:72:	Fail
+demo0.t.c:65:	TEST Fail and end at the same time
+demo0.t.c:80:	SKIP Skip or mark any test as TODO
+demo0.t.c:82:	SKIP Not finished or just ignored test
+demo0.t.c	3 err

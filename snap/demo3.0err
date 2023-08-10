@@ -1,0 +1,8 @@
+demo3.t.c:24:	CLAMP(-1, 2, 1)
+demo3.t.c:19:	TEST Custom CLAMP macro
+demo3.t.c:56:	HAS_INT(arr, 5, 5)
+demo3.t.c:49:	TEST Custom HAS_INT macro
+demo3.t.c:105:	STARTS_WITH(str, "abc")
+	Lorem ipsum
+	abc
+demo3.t.c:98:	TEST Custom STARTS_WITH macro

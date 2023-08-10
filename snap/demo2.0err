@@ -1,0 +1,54 @@
+demo2.t.c:11:	OK(!bool_t)
+demo2.t.c:12:	OK(bool_f)
+demo2.t.c:14:	OK(0)
+demo2.t.c:15:	OK(!1)
+demo2.t.c:16:	OK(1 != 1)
+demo2.t.c:17:	OK(0 == 1)
+demo2.t.c:19:	Custom fail message
+demo2.t.c:20:	Custom fail message
+demo2.t.c:6:	TEST booleans
+demo2.t.c:28:	OK(123 != 123)
+demo2.t.c:29:	OK(num != 123)
+demo2.t.c:30:	OK(num != num)
+demo2.t.c:31:	OK(num <= 100)
+demo2.t.c:33:	OK(1.23 != 1.23)
+demo2.t.c:34:	OK(fnum != 0.1 + 0.2)
+demo2.t.c:35:	OK(fnum != fnum)
+demo2.t.c:37:	OK(123 == 456)
+demo2.t.c:38:	OK(num == 456)
+demo2.t.c:40:	OK(1.23 == -1.23)
+demo2.t.c:41:	OK(0.3 == 0.1 + 0.2)
+demo2.t.c:42:	OK(fnum == num)
+demo2.t.c:23:	TEST numbers
+demo2.t.c:49:	STR_NEQ("Lorem ipsum", "Lorem ipsum")
+demo2.t.c:50:	STR_NEQ(str, "Lorem ipsum")
+demo2.t.c:51:	STR_NEQ(str, str)
+demo2.t.c:52:	STR_NEQ(NULL, NULL)
+demo2.t.c:54:	STR_EQ(str, NULL)
+	'Lorem ipsum'
+	'<NULL>'
+demo2.t.c:55:	STR_EQ("Lorem ipsum", NULL)
+	'Lorem ipsum'
+	'<NULL>'
+demo2.t.c:56:	STR_EQ("Lorem ipsum", "test")
+	'Lorem ipsum'
+	'test'
+demo2.t.c:45:	TEST strings
+demo2.t.c:66:	BUF_NEQ("Lorem ipsum", "Lorem ipsum", 10)
+demo2.t.c:67:	BUF_NEQ(str, str, strlen(str))
+demo2.t.c:68:	BUF_NEQ(buf, buf, 16)
+demo2.t.c:69:	BUF_NEQ(buf, buf, 4)
+demo2.t.c:70:	BUF_NEQ(buf, str, 4)
+demo2.t.c:72:	BUF_EQ("Lorem ipsum", "Lorem  psum", 10)
+	'Lorem ipsu'
+	'Lorem  psu'
+demo2.t.c:73:	BUF_EQ(str, "Lorem ipsum", 8)
+	'The tric'
+	'Lorem ip'
+demo2.t.c:74:	BUF_EQ(buf, "Lorem ipsum", 8)
+	'The tric'
+	'Lorem ip'
+demo2.t.c:59:	TEST buffers
+demo2.t.c:79:	Custom fail message
+demo2.t.c:77:	TEST flow
+demo2.t.c	5 err

@@ -5,4 +5,5 @@ CC="cc"
 # -fsanitize=undefined,address
 CFLAGS="-Wall -Wextra -Wshadow -Wmissing-declarations -Wswitch-enum -pedantic -std=c89"
 
-$CC $CFLAGS -o walter.t walter.t.c && ./walter.t
+$CC $CFLAGS -o walter.t walter.t.c
+./walter.t

@@ -21,21 +21,23 @@
  *		STR_NEQ(s1, s2);        // Are strings not equal?
  *		BUF_NEQ(b1, b2, size);  // Are buffers not equal?
  *
- *		// Process assertion.  IOE stands for Input Output
- *		// Error.  Macro takes CMD command to run, IN file
- *		// path to command stdin, OUT path to file with
- *		// expected stdout, ERR path to file with expected
- *		// stderr and CODE, the expected exit code.  File
- *		// paths can be omitted to ignore that command part.
- *		// Assertion will pass if expected OUT, ERR and exit
- *		// CODE will be the equal to what CMD produce.
+ *		// Run CMD with IN standard input expecting OUT
+ *		// standard output and ERR standard error and CODE
+ *              // exit code.  When file path for IN, OUT, ERR are
+ *		// NULL then this part of input/output is ignored.
  *		//
  *		//   CMD          IN        OUT        ERR       CODE
- *		IOE("grep wh_",  "in.txt", "out.txt", "err.txt", 0);
- *		IOE("sed -i",    "in.txt",  NULL,      NULL,     1);
- *		IOE("./demo0.t",  NULL,    "out.txt", "err.txt", 5);
- *		IOE("ls -lh",     NULL,    "out.txt",  NULL,     0);
- *		IOE("pwd",        0,        0,         0,        0);
+ *		RUN("grep wh_",  "in.txt", "out.txt", "err.txt", 0);
+ *		RUN("sed -i",    "in.txt",  NULL,      NULL,     1);
+ *		RUN("./demo0.t",  NULL,    "out.txt", "err.txt", 5);
+ *		RUN("ls -lh",     NULL,    "out.txt",  NULL,     0);
+ *		RUN("pwd",        0,        0,         0,        0);
+ *
+ *		// Same as RUN macro but provide string directly
+ *		// instead of paths to files with expected stdin,
+ *		// stdout and stderr.  All 3 values can be omitted
+ *		// with NULL.
+ *		STR_RUN("tr abc 123", "AaBbCc", "A1B2C3", 0, 0);
  *	}
  *	TEST("Another test 1") { ... }  // Define as many as WH_MAX
  *	SKIP("Another test 2") { ... }  // Skip or just ignore test
@@ -75,18 +77,23 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <err.h>
 
 #ifndef WH_MAX			/* Maximum number of TEST/SKIP/ONLY */
 #define WH_MAX  64		/* test macros that can be handled. */
 #endif				/* Predefine to handle more tests.  */
 
 #ifndef WH_SHOW			/* How many characters/bytes print  */
-#define WH_SHOW 32		/* when file comperation fail, IOE. */
+#define WH_SHOW 32		/* when file comperation fail, RUN. */
 #endif				/* Predefine for different amount.  */
+
+#define WH_IN	"/tmp/walter.h.in"
+#define WH_OUT	"/tmp/walter.h.out"
+#define WH_ERR	"/tmp/walter.h.err"
 
 #define __WH_BASE(_msg, id, _line, _type)                            \
 	void __wh_test_body##id(void);                               \
-	/* This function will be run before "main" function. */      \
+	/* This function will run before "main" function. */         \
 	void __wh_test##id(void) __attribute__ ((constructor));      \
 	void __wh_test##id(void) {                                   \
 		/* Init on first TEST(). */                          \
@@ -112,12 +119,12 @@
 #define SKIP(msg) _WH_BASE(msg, __LINE__, _WH_SKIP)
 #define ONLY(msg) _WH_BASE(msg, __LINE__, _WH_ONLY)
 
-/* Main assertion macro that every other assertion macro use. */
+/* Core assertion macro that every other assertion macro use. */
 #define __WH_ASSERT(bool, onfail, line) do {                         \
 		_wh.last_all++;                                      \
 		if (bool) break;                /* Pass */           \
 		_wh.last_err++;                 /* Fail */           \
-		fprintf(stderr, "%s:%d:\t", _wh.fname, line);  \
+		fprintf(stderr, "%s:%d:\t", _wh.fname, line);        \
 		onfail;                                              \
 		fputc('\n', stderr);                                 \
 		if (_wh.flag & _WH_Q) return;   /* End quick */      \
@@ -148,10 +155,13 @@
 /* Force end of test block. */
 #define END() do {return;} while(0)
 
-/* Input Outpur Error assertion. */
-#define IOE(cmd, in, out, err, code)				\
+/* Run CMD assertions. */
+#define RUN(cmd, in, out, err, code)				\
 	ASSERT(_wh_run(cmd, in, out, err, code),		\
-	       "IOE("#cmd", "#in", "#out", "#err", "#code")")
+	       "RUN("#cmd", "#in", "#out", "#err", "#code")")
+#define STR_RUN(cmd, in, out, err, code)			\
+	ASSERT(_wh_str_run(cmd, in, out, err, code),		\
+	       "STR_RUN("#cmd", "#in", "#out", "#err", "#code")")
 
 enum {				/* Flags */
 	_WH_V = 1,		/* Verbose mode */
@@ -192,9 +202,8 @@ int _wh_fdcmp(int fd0, int fd1);
 
 /* Split STR string with SPLIT char.  Return array of null terminated
  * strings with NULL being last array element.  Original STR string
- * will not be modified.  Memory will be allocated, remember to use
- * free. */
-char **_wh_malloc_split(char *str, char split);
+ * will not be modified. */
+char **_wh_split(char *str, char split);
 
 /* Test CMD.  IN, OUT and ERR are optional paths to files used as
  * stdin, stdou and stderr, can be ommited by setting them to NULL.
@@ -204,233 +213,9 @@ char **_wh_malloc_split(char *str, char split);
  * CMD exit code.  Return 0 on failure. */
 int _wh_run(char *cmd, char *in, char *out, char *err, int code);
 
-/* Definitions ==================================================== */
-
-int
-_wh_cmp(char *a, char *b, ssize_t siz)
-{
-	ssize_t i = 0;
-	while (i < siz && a[i] == b[i]) i++;
-	return i < siz ? i : -1;
-}
-
-int
-_wh_fdcmp(int fd0, int fd1)
-{
-	int show;		/* How many bytes print on error */
-	ssize_t diff=-1;	/* FD0 difference index, -1 no diff */
-	ssize_t sum=0;		/* Sum of read bytes */
-	ssize_t siz0, siz1;	/* Size of read buffer */
-	char buf0[BUFSIZ];	/* Buffer for reading from fd0 */
-	char buf1[BUFSIZ];	/* Buffer for reading from fd1 */
-	while ((siz0 = read(fd0, buf0, BUFSIZ)) > 0) {
-		/* We should be able to read the same amount of bytes
-		 * SIZ0 from FD1 as we read from FD0.  So we should at
-		 * leas be able to read from FD1 and SIZ0 and SIZ1
-		 * should be the same. */
-		if ((siz1 = read(fd1, buf1, siz0)) == -1) {
-			diff = 0;
-			break;
-		}
-		if (siz0 != siz1) {
-			diff = siz0 < siz1 ? siz0 : siz1;
-			break;
-		}
-		/* Compare buffers.  Set DIFF to index of BUF0 when
-		 * difference was found. */
-		if ((diff = _wh_cmp(buf0, buf1, siz0)) >= 0) {
-			break;
-		}
-		sum += siz0;
-	}
-	/* At this point BUF0 was read in it's entirely but BUF1 might
-	 * still hold more data.  If difference was not found at this
-	 * point then check if there is still something in BUF1 which
-	 * means buffers are different at last position of BUF0. */
-	if (diff == -1 && (siz1 = read(fd1, buf1, BUFSIZ)) > 0) {
-		diff = siz0;
-	}
-	/* When diff is a valid BUFF0 index (not -1) then we found
-	 * difference at that index.  If so then print WH_SHOW amount
-	 * of bytes (if possible because there might be less bytes
-	 * available) up to the DIFF index showing where is first
-	 * difference along with index to that byte. */
-	if (diff >= 0) {
-		show = (diff > WH_SHOW ? WH_SHOW : diff);
-		fprintf(stderr, "\t'%.*s' < difference at byte %ld\n",
-			show, &buf0[diff-show+1], sum+diff);
-		return 1;
-	}
-	return 0;
-}
-
-char **
-_wh_malloc_split(char *str, char split)
-{
-	char *buf;		/* Buffer for all array strings. */
-	char **res;		/* Result, array of strings */
-	size_t i, j=1, siz;
-	siz = strlen(str);
-	/* BUF will be a copy of STR to avoid modifying STR. */
-	buf = malloc(siz+1);	/* +1 for null terminator */
-	memcpy(buf, str, siz+1);
-	/* Find all occurrences of SPLIT character, count how many
-	 * there are in J var.  Replace those characters with 0 making
-	 * a list of null terminated strings inside BUF. */
-	for (i=0; i < siz; i++) {
-		if (buf[i] == split) {
-			buf[i] = 0;
-			j++;
-		}
-	}
-	/* Allocate pointers to strings for each null terminates
-	 * string created in previous loop.  Add +1 for last array
-	 * null value marking end of array. */
-	res = malloc(sizeof(char*) * (j+1));
-	/* Set each array index to each string in BUF. */
-	res[0] = buf;
-	for (j=1, i=0; i < siz; i++) {
-		if (buf[i] == 0) {
-			res[j++] = &buf[i+1];
-		}
-	}
-	/* Set end of array with NULL. */
-	res[j] = NULL;
-	return res;
-}
-
-int
-_wh_run(char *cmd, char *in, char *out, char *err, int code)
-{
-	int fd;			/* File desciptor for in, out, err */
-	int fd_in[2];		/* File desciptors for input pipe */
-	int fd_out[2];		/* File desciptors for output pipe */
-	int fd_err[2];		/* File desciptors for error pipe */
-	int ws, wes;		/* Wait status, wait exit status */
-	pid_t pid;		/* CMD process id */
-	char buf[BUFSIZ];	/* For passing stdin to PID IN pipe */
-	ssize_t ssiz;		/* Signed size, to read bytes */
-	char **args;		/* Array of CMD program args */
-	args = _wh_malloc_split(cmd, ' ');
-	/* Open pipes.  We need pipe for stdin, stdout and asderr. */
-	if (pipe(fd_in)  == -1) { perror("pipe(fd_in)");  return 1; }
-	if (pipe(fd_out) == -1) { perror("pipe(fd_out)"); return 1; }
-	if (pipe(fd_err) == -1) { perror("pipe(fd_err)"); return 1; }
-	/* Fork process to run CMD as a child. */
-	if ((pid = fork()) == -1) {
-		perror("fork");
-		return 0;
-	}
-	if (pid == 0) {		/* Child process, the CMD */
-		/* Close "write" end of IN pipe and "read" end of
-		 * pipes for OUT and ERR because those will be used by
-		 * parent process. */
-		close(fd_in[1]);  /* Index 1 is for writing. */
-		close(fd_out[0]); /* Index 0 is for reading */
-		close(fd_err[0]);
-		/* Close default stdin, stdout and stderr in child to
-		 * free file desciptors used by those default pipes.
-		 * Usually stdin is 0, stdout 1 and stderr 2 but it's
-		 * better to use macros. */
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		close(STDERR_FILENO);
-		/* Diplicate our pipes that are still open in child.
-		 * Duplication will make them take first lowest file
-		 * desciptor number and because we just closed default
-		 * pipes our own pipes will replace them.  This result
-		 * in child process using our custom pipes instead of
-		 * default pipes.  With that we can controll what goes
-		 * into stdin and what comes out stdout and stderr in
-		 * parent process by writing adn reading the other
-		 * side of our pipes. */
-		dup(fd_in[0]);
-		dup(fd_out[1]);
-		dup(fd_err[1]);
-		/* Run CMD.  First arg in ARGS is path to program.
-		 * Then whole array of ARGS is passed as program
-		 * arguments because it's common practice to pass path
-		 * to program as first argument so use whole array. */
-		if (execv(args[0], args) == -1) {
-			perror("execv");
-			exit(1);
-		}
-		free(args);	/* Freedom */
-		/* At this point child ended.  We can close pipes. */
-		close(fd_in[0]); close(fd_out[1]); close(fd_err[1]);
-		exit(0);	/* End child process */
-	}
-	/* Parent process. */
-	close(fd_in[0]);
-	close(fd_out[1]);
-	close(fd_err[1]);
-	/* If IN, path to file with stdin value, is defined then pass
-	 * content of that file to stdin of child process using write
-	 * end of our custom FD_IN pipe. */
-	if (in) {
-		if ((fd = open(in, O_RDONLY)) == -1) {
-			perror("open(in)");
-			return 0;
-		}
-		while ((ssiz = read(fd, buf, BUFSIZ)) > 0) {
-			if (write(fd_in[1], buf, ssiz) == -1) {
-				perror("write(in)");
-				return 0;
-			}
-		}
-		if (close(fd) == -1) {
-			perror("close(in)");
-			return 0;
-		}
-	}
-	close(fd_in[1]);	/* Close pipe. */
-	/* If OUT, path to file with expected values of stdout in CMD,
-	 * id defined then open content of that file and compare it to
-	 * what came out of read end of our custom FD_OUT pipe. */
-	if (out) {
-		if ((fd = open(out, O_RDONLY)) == -1) {
-			perror("open(out)");
-			return 0;
-		}
-		if (_wh_fdcmp(fd_out[0], fd)) {
-			return 0;
-		}
-		if (close(fd) == -1) {
-			perror("close(out)");
-			return 0;
-		}
-	}
-	close(fd_out[0]);	/* Close pipe. */
-	/* If ERR, path to file with expected values of stderr in CMD,
-	 * id defined then open content of that file and compare it to
-	 * what came err of read end of our custom FD_ERR pipe. */
-	if (err) {
-		if ((fd = open(err, O_RDONLY)) == -1) {
-			perror("open(err)");
-			return 0;
-		}
-		if (_wh_fdcmp(fd_err[0], fd)) {
-			return 0;
-		}
-		if (close(fd) == -1) {
-			perror("close(err)");
-			return 0;
-		}
-	}
-	close(fd_err[0]);	/* Close pipe. */
-	/* Wait for child process to exit. */
-	if (waitpid(pid, &ws, 0) == -1) {
-		perror("waitpid");
-		return 0;
-	}
-	/* Get child process exit code. */
-	if (WIFEXITED(ws) && (wes = WEXITSTATUS(ws)) != code) {
-		fprintf(stderr, "\tError code (expected, received): %d, %d\n",
-			code, wes);
-		return 0;	/* False */
-	}
-	return 1;		/* True */
-}
+/* Works the same as _wh_run but IN, OUT and ERR are not paths to
+ * files but strings. */
+int _wh_str_run(char *cmd, char *in, char *out, char *err, int code);
 
 /* Runs tests defined with TEST, SKIP and ONLY macros.
  * Return number of failed tests or 0 on success. */
@@ -446,10 +231,12 @@ main(int argc, char **argv)
 		case 'h':
 		default:
 			fprintf(stderr, "usage: %s [-vqh]\n\n"
-			       "\t-v\tPrint verbose output.\n"
-			       "\t-q\tQuick, show first fail in test.\n"
-			       "\t-f\tFast, exit on first failed test.\n"
-			       "\t-h\tPrints this help usage message.\n",
+				"\t-v\tPrint verbose output.\n"
+				"\t-q\tQuick, stop test on first"
+				" failed assertion.\n"
+				"\t-f\tFast, exit program on first"
+				" failed test.\n"
+				"\t-h\tPrints this help message.\n",
 			       argv[0]);
 			return 1;
 		}
@@ -503,6 +290,188 @@ main(int argc, char **argv)
 		fprintf(stderr, "%s\t%d err\n", _wh.fname, _wh.err);
 	}
 	return _wh.err;
+}
+
+int
+_wh_cmp(char *a, char *b, ssize_t siz)
+{
+	ssize_t i = 0;
+	while (i < siz && a[i] == b[i]) i++;
+	return i < siz ? i : -1;
+}
+
+int
+_wh_fdcmp(int fd0, int fd1)
+{
+	int show;		/* How many bytes print on error */
+	ssize_t diff=-1;	/* FD0 difference index, -1 no diff */
+	ssize_t sum=0;		/* Sum of read bytes */
+	ssize_t siz0, siz1;	/* Size of read buffer */
+	char buf0[BUFSIZ];	/* Buffer for reading from fd0 */
+	char buf1[BUFSIZ];	/* Buffer for reading from fd1 */
+	while ((siz0 = read(fd0, buf0, BUFSIZ)) > 0) {
+		/* We should be able to read the same amount of bytes
+		 * SIZ0 from FD1 as we read from FD0.  So we should at
+		 * leas be able to read from FD1 and SIZ0 and SIZ1
+		 * should be the same. */
+		if ((siz1 = read(fd1, buf1, siz0)) == -1) {
+			/* TODO(irek): Instead of returning diff I
+			 * should print error as soon as as it was
+			 * found.  Mayber? */
+			diff = 0;
+			break;
+		}
+		/* Compare buffers.  Set DIFF to index of BUF0 when
+		 * difference was found. */
+		if ((diff = _wh_cmp(buf0, buf1, siz0)) >= 0) {
+			break;
+		}
+		if (siz0 != siz1) {
+			diff = siz0 < siz1 ? siz0 : siz1;
+			break;
+		}
+		sum += siz0;
+	}
+	/* At this point BUF0 was read in it's entirely but BUF1 might
+	 * still hold more data.  If difference was not found at this
+	 * point then check if there is still something in BUF1 which
+	 * means buffers are different at last position of BUF0. */
+	if (diff == -1 && (siz1 = read(fd1, buf1, BUFSIZ)) > 0) {
+		diff = siz0;
+	}
+	/* When diff is a valid BUFF0 index (not -1) then we found
+	 * difference at that index.  If so then print WH_SHOW amount
+	 * of bytes (if possible because there might be less bytes
+	 * available) up to the DIFF index showing where is first
+	 * difference along with index to that byte. */
+	if (diff >= 0) {
+		show = (diff > WH_SHOW ? WH_SHOW : diff);
+		fprintf(stderr, "\t'%.*s' < difference at byte %ld\n",
+			show, &buf0[diff-show+1], sum+diff);
+		return 1;
+	}
+	return 0;
+}
+
+int
+_wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
+{
+	int fd;			/* sin, sout, serr file desciptor */
+	int fd_in[2];		/* File desciptors for input pipe */
+	int fd_out[2];		/* File desciptors for output pipe */
+	int fd_err[2];		/* File desciptors for error pipe */
+	int ws, wes;		/* Wait status, wait exit status */
+	pid_t pid;		/* CMD process id */
+	char buf[BUFSIZ];	/* For passing stdin to PID SIN pipe */
+	ssize_t ssiz;		/* Signed size, to read bytes */
+	/* Open pipes.  We need pipe for stdin, stdout and asderr. */
+	if (pipe(fd_in)  == -1) err(1, "pipe(fd_in)");
+	if (pipe(fd_out) == -1) err(1, "pipe(fd_out)");
+	if (pipe(fd_err) == -1) err(1, "pipe(fd_err)");
+	/* Fork process to run CMD as a child. */
+	if ((pid = fork()) == -1) err(1, "fork");
+	if (pid == 0) {		  /* Child process, the CMD */
+		close(fd_in[1]);  /* Index 1 is for writing. */
+		close(fd_out[0]); /* Index 0 is for reading */
+		close(fd_err[0]);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		close(STDERR_FILENO);
+		dup(fd_in[0]);
+		dup(fd_out[1]);
+		dup(fd_err[1]);
+		if (execl("/bin/sh", "sh", "-c", cmd, 0) == -1) {
+			perror("execl");
+			return 0;
+		}
+		close(fd_in[0]); close(fd_out[1]); close(fd_err[1]);
+		exit(0);
+	}
+	/* Parent process. */
+	close(fd_in[0]);
+	close(fd_out[1]);
+	close(fd_err[1]);
+	/* Pass standard intput. */
+	if (sin) {
+		if ((fd = open(sin, O_RDONLY)) == -1) {
+			err(1, "open(%s)", sin);
+		}
+		while ((ssiz = read(fd, buf, BUFSIZ)) > 0) {
+			if (write(fd_in[1], buf, ssiz) == -1) {
+				perror("write(sin)");
+				return 0;
+			}
+		}
+		if (close(fd) == -1) {
+			err(1, "close(%s)", sin);
+		}
+	}
+	close(fd_in[1]);
+	/* Compare standard output. */
+	if (sout) {
+		if ((fd = open(sout, O_RDONLY)) == -1) {
+			err(1, "open(%s)", sout);
+		}
+		if (_wh_fdcmp(fd_out[0], fd)) {
+			fprintf(stderr, "\tstdout\n");
+			return 0;
+		}
+		if (close(fd) == -1) {
+			err(1, "close(%s)", sout);
+		}
+	}
+	close(fd_out[0]);
+	/* Compare standard error. */
+	if (serr) {
+		if ((fd = open(serr, O_RDONLY)) == -1) {
+			err(1, "open(%s)", serr);
+		}
+		if (_wh_fdcmp(fd_err[0], fd)) {
+			fprintf(stderr, "\tstderr\n");
+			return 0;
+		}
+		if (close(fd) == -1) {
+			err(1, "close(%s)", serr);
+		}
+	}
+	close(fd_err[0]);
+	/* Wait for child process to exit. */
+	if (waitpid(pid, &ws, 0) == -1) {
+		perror("waitpid");
+		return 0;
+	}
+	/* Get child process exit code. */
+	if (WIFEXITED(ws) && (wes = WEXITSTATUS(ws)) != code) {
+		fprintf(stderr, "\tExpected exit code %d, got %d\n",
+			code, wes);
+		return 0;	/* Failed */
+	}
+	return 1;		/* Success */
+}
+
+int
+_wh_str_run(char *cmd, char *sin, char *sout, char *serr, int code)
+{
+	FILE *fp;
+	if (sin) {
+		if (!(fp=fopen(WH_IN, "w"))) err(1, "fopen(sin)");
+		if (fputs(sin, fp) == EOF)   err(1, "fputs(sin)");
+		if (fclose(fp))              err(1, "fopen(sin)");
+		sin = WH_IN;
+	}
+	if (sout) {
+		if (!(fp=fopen(WH_OUT, "w"))) err(1, "fopen(sout)");
+		if (fputs(sout, fp) == EOF)   err(1, "fputs(sout)");
+		if (fclose(fp))               err(1, "fopen(sout)");
+		sout = WH_OUT;
+	}
+	if (serr) {
+		if (!(fp=fopen(WH_ERR, "w"))) err(1, "fopen(serr)");
+		if (fputs(serr, fp) == EOF)   err(1, "fputs(serr)");
+		if (fclose(fp))               err(1, "fopen(serr)");
+		serr = WH_ERR;
+	}
+	return _wh_run(cmd, sin, sout, serr, code);
 }
 /*
 This software is available under 2 licenses, choose whichever.

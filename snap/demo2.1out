@@ -1,0 +1,6 @@
+TEST booleans	(0/1) pass
+TEST numbers	(0/1) pass
+TEST strings	(0/1) pass
+TEST buffers	(0/1) pass
+TEST flow	(0/1) pass
+FILE demo2.t.c	(0/5) pass

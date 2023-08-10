@@ -1,9 +1,0 @@
-demo0.t.c:27: warning:	OK(0)
-demo0.t.c:25: error:	TEST You shall not pass!
-demo0.t.c:44: warning:	Fail
-demo0.t.c:37: error:	TEST Trigger fail at any moment
-demo0.t.c:72: warning:	Fail
-demo0.t.c:65: error:	TEST Fail and end at the same time
-demo0.t.c:80: note:	SKIP Skip or mark any test as TODO
-demo0.t.c:82: note:	SKIP Not finished or just ignored test
-demo0.t.c	3 err
