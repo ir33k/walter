@@ -1,7 +1,7 @@
 /* Walter is a single header library for writing unit tests in C made
- * with fewer complications.
+ * with fewer complications by avoiding boilerplate.
  *
- * walter.h v3.0 from https://github.com/ir33k/walter by Irek
+ * walter.h v3.0 from https://github.com/ir33k/walter by irek@gabr.pl
  *
  * Example usage:
  *
@@ -38,7 +38,7 @@
  *		IOE("pwd",        0,        0,         0,        0);
  *	}
  *	TEST("Another test 1") { ... }  // Define as many as WH_MAX
- *	SKIP("Another test 2") { ... }  // Skip, ignore test
+ *	SKIP("Another test 2") { ... }  // Skip or just ignore test
  *	SKIP("Another test 3") {}       // Body can be empty
  *	SKIP("TODO test 4")    {}       // Can be used for TODOs
  *	ONLY("Another test 5") { ... }  // Ignore all other tests
@@ -59,15 +59,14 @@
  * predefining WH_MAX (see example).  Variables, functions and macros
  * not mentioned in example test program should not be used.
  *
- * WH_ prefix stands for Walter.H.  Used for lib code that you might
- * consider using but it's usually not necessary.  WH__ is used for
- * private stuff and WH____ is for super epic internal private stuff,
- * just move along, this is not the code you are looking for.
+ * WH_ prefix stands for Walter.H.  _WH_ is used for private stuff.
+ * __WH_ is for super epic internal private stuff, just move along,
+ * this is not the code you are looking for  \(-_- )
  */
-#ifdef WALTER_H_
+#ifdef _WALTER_H
 #error "walter.h can't be included multiple times (read doc)"
 #endif
-#define WALTER_H_
+#define _WALTER_H
 
 #include <fcntl.h>
 #include <getopt.h>
@@ -77,7 +76,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#ifndef WH_MAX			/* Maximum number of TEST/SKIP/OMIT */
+#ifndef WH_MAX			/* Maximum number of TEST/SKIP/ONLY */
 #define WH_MAX  64		/* test macros that can be handled. */
 #endif				/* Predefine to handle more tests.  */
 
@@ -85,142 +84,138 @@
 #define WH_SHOW 32		/* when file comperation fail, IOE. */
 #endif				/* Predefine for different amount.  */
 
-#define WH____TEST(_msg, id, _line, _type)				\
-	void wh____test_body##id(void);					\
-	/* This function will be run before "main" function. */		\
-	void wh____test##id(void) __attribute__ ((constructor));	\
-	void wh____test##id(void) {					\
-		/* Init on first TEST(). */				\
-		if (wh__.all == 0) wh__.fname = __FILE__;		\
-		if (_type == WH_ONLY) wh__.flag |= WH_O;		\
-		wh__.its[wh__.all] = &wh____test_body##id;		\
-		wh__.msg[wh__.all] = _msg;				\
-		wh__.line[wh__.all] = _line;				\
-		wh__.type[wh__.all] = _type;				\
-		wh__.all++;						\
-		if (wh__.all <= WH_MAX) return;				\
-		fprintf(stderr, "ERR exceeded WH_MAX (see doc)\n");	\
-		exit(1);        /* Too many tests */			\
-	}								\
-	void wh____test_body##id(void)
+#define __WH_BASE(_msg, id, _line, _type)                            \
+	void __wh_test_body##id(void);                               \
+	/* This function will be run before "main" function. */      \
+	void __wh_test##id(void) __attribute__ ((constructor));      \
+	void __wh_test##id(void) {                                   \
+		/* Init on first TEST(). */                          \
+		if (_wh.all == 0) _wh.fname = __FILE__;              \
+		if (_type == _WH_ONLY) _wh.flag |= _WH_O;            \
+		_wh.its[_wh.all] = &__wh_test_body##id;              \
+		_wh.msg[_wh.all] = _msg;                             \
+		_wh.line[_wh.all] = _line;                           \
+		_wh.type[_wh.all] = _type;                           \
+		_wh.all++;                                           \
+		if (_wh.all <= WH_MAX) return;                       \
+		fprintf(stderr, "ERR exceeded WH_MAX (see doc)\n");  \
+		exit(1);        /* Too many tests */                 \
+	}                                                            \
+	void __wh_test_body##id(void)
 
-/* Intermediate macro function WH__TEST is necessary to "unwrap"
+/* Intermediate macro function _WH_BASE is necessary to "unwrap"
  * __LINE__ macro so it could be used as a ID string. */
-#define WH__TEST(msg, id, type) WH____TEST(msg, id, __LINE__, type)
+#define _WH_BASE(msg, id, type) __WH_BASE(msg, id, __LINE__, type)
 
 /* Main test macros for defining test blocks. */
-#define TEST(msg) WH__TEST(msg, __LINE__, WH_TEST)
-#define SKIP(msg) WH__TEST(msg, __LINE__, WH_SKIP)
-#define ONLY(msg) WH__TEST(msg, __LINE__, WH_ONLY)
+#define TEST(msg) _WH_BASE(msg, __LINE__, _WH_TEST)
+#define SKIP(msg) _WH_BASE(msg, __LINE__, _WH_SKIP)
+#define ONLY(msg) _WH_BASE(msg, __LINE__, _WH_ONLY)
 
 /* Main assertion macro that every other assertion macro use. */
-#define WH____ASSERT(bool, onfail, line) do {				\
-		wh__.last_all++;					\
-		if (bool) break;	/* Pass */			\
-		wh__.last_err++;	/* Fail */			\
-		fprintf(stderr, "%s:%d: warning:\t", wh__.fname, line); \
-		onfail;							\
-		fputc('\n', stderr);					\
-		if (wh__.flag & WH_Q) return; /* Stop on first fail */	\
+#define __WH_ASSERT(bool, onfail, line) do {                         \
+		_wh.last_all++;                                      \
+		if (bool) break;                /* Pass */           \
+		_wh.last_err++;                 /* Fail */           \
+		fprintf(stderr, "%s:%d:\t", _wh.fname, line);  \
+		onfail;                                              \
+		fputc('\n', stderr);                                 \
+		if (_wh.flag & _WH_Q) return;   /* End quick */      \
 	} while(0)
 
 /* Helper assertion macros. */
-#define WH__ASSERT(bool, onfail) WH____ASSERT(bool, onfail, __LINE__)
-#define WH__STR_EQ(a,b) ((a && b && !strcmp(a?a:"", b?b:"")) || (!a && !b))
-#define WH__BUF_EQ(a,b,n) (strncmp(a,b,n) == 0)
+#define _WH_ASSERT(bool, onfail) __WH_ASSERT(bool, onfail, __LINE__)
+#define _WH_STR_EQ(a,b) ((a && b && !strcmp(a?a:"", b?b:"")) || (!a && !b))
+#define _WH_BUF_EQ(a,b,n) (strncmp(a,b,n) == 0)
 
 /* Basic assertions. */
-#define ASSERT(x,msg) WH__ASSERT(x, fputs(msg, stderr))
+#define ASSERT(x,msg) _WH_ASSERT(x, fputs(msg, stderr))
 #define OK(x) ASSERT(x, "OK("#x")")
 #define EQ(a,b) ASSERT((a) == (b), "EQ("#a", "#b")")
-#define STR_EQ(a,b) WH__ASSERT(WH__STR_EQ(a,b),				\
+#define STR_EQ(a,b) _WH_ASSERT(_WH_STR_EQ(a,b),				\
 			       fprintf(stderr, "STR_EQ(%s, %s)\n"	\
 				       "\t'%s'\n\t'%s'",		\
 				       #a, #b,				\
 				       a?a:"<NULL>", b?b:"<NULL>"))
-#define BUF_EQ(a,b,n) WH__ASSERT(WH__BUF_EQ(a,b,n),			\
+#define BUF_EQ(a,b,n) _WH_ASSERT(_WH_BUF_EQ(a,b,n),			\
 				 fprintf(stderr, "BUF_EQ(%s, %s, %s)\n"	\
 					 "\t'%.*s'\n\t'%.*s'",		\
 					 #a, #b, #n,			\
 					 (int)n, a, (int)n, b))
-#define STR_NEQ(a,b)   ASSERT(!WH__STR_EQ(a,b),   "STR_NEQ("#a", "#b")")
-#define BUF_NEQ(a,b,n) ASSERT(!WH__BUF_EQ(a,b,n), "BUF_NEQ("#a", "#b", "#n")")
+#define STR_NEQ(a,b)   ASSERT(!_WH_STR_EQ(a,b),   "STR_NEQ("#a", "#b")")
+#define BUF_NEQ(a,b,n) ASSERT(!_WH_BUF_EQ(a,b,n), "BUF_NEQ("#a", "#b", "#n")")
 
 /* Force end of test block. */
 #define END() do {return;} while(0)
 
-/* Process assertion. */
+/* Input Outpur Error assertion. */
 #define IOE(cmd, in, out, err, code)				\
-	ASSERT(wh__ioe(cmd, in, out, err, code),		\
+	ASSERT(_wh_run(cmd, in, out, err, code),		\
 	       "IOE("#cmd", "#in", "#out", "#err", "#code")")
 
 enum {				/* Flags */
-	WH_V = 1,		/* Verbose mode */
-	WH_Q = 2,		/* Quick mode */
-	WH_F = 4,		/* Fast mode */
-	WH_O = 8		/* ONLY test macro was used */
+	_WH_V = 1,		/* Verbose mode */
+	_WH_Q = 2,		/* Quick mode */
+	_WH_F = 4,		/* Fast mode */
+	_WH_O = 8		/* ONLY test macro was used */
 };
 enum {				/* Test macro types */
-	WH_TEST = 0,		/* Regular test */
-	WH_SKIP,		/* Skip test */
-	WH_ONLY,		/* Run only ONLY tests */
-	WH__SIZ			/* For wh__type array size */
+	_WH_TEST = 0,		/* Regular test */
+	_WH_SKIP,		/* Skip test */
+	_WH_ONLY,		/* Run only ONLY tests */
+	__WH_SIZ		/* For _wh_type array size */
 };
 struct {			/* Tests global state */
-	int    flag;            /* Program flags, enum WH_V... */
+	char  *fname;           /* Test source file name */
+	int    flag;            /* Program flags, enum _WH_V... */
 	int    all;             /* Number of all tests */
 	int    err;             /* Number of failed tests */
 	int    last_all;        /* Last test assertions count */
 	int    last_err;        /* Last test assertions fails */
 	int    line[WH_MAX];    /* TEST macros line in file */
 	int    type[WH_MAX];    /* Test type enum WH_SKIP... */
-	char  *fname;           /* Test source file name */
 	char  *msg[WH_MAX];     /* TEST macro messages */
 	void (*its[WH_MAX])();	/* Test functions pointers */
-} wh__ = {0, 0, 0, 0, 0, {0}, {0}, NULL, {NULL}, {NULL}};
+} _wh = {0, 0, 0, 0, 0, 0, {0}, {0}, {0}, {0}};
 
 /* String representations of test macro types. */
-const char *wh__type[WH__SIZ] = {"TEST", "SKIP", "ONLY"};
+const char *_wh_type[__WH_SIZ] = {"TEST", "SKIP", "ONLY"};
+
+/* Compare A and B buffers content of SIZ size.  Return index to
+ * first byte that is different or -1 when buffers are the same. */
+int _wh_cmp(char *a, char *b, ssize_t siz);
+
+/* Compare files pointed by FD0 and FD1 file desciptors.  Print error
+ * message showing where the differance is if content is not the
+ * same.  Return 0 when files are the same. */
+int _wh_fdcmp(int fd0, int fd1);
 
 /* Split STR string with SPLIT char.  Return array of null terminated
  * strings with NULL being last array element.  Original STR string
  * will not be modified.  Memory will be allocated, remember to use
  * free. */
-char **wh__malloc_split(char *str, char split);
+char **_wh_malloc_split(char *str, char split);
 
-/* Compare BUF0 and BUF1 content of SIZ size.  Return index to first
- * byte that is different or -1 when buffers are the same. */
-int wh__bufncmp(char *buf0, char *buf1, ssize_t siz);
-
-/* Compare files pointed by FD0 and FD1 file desciptors.  Print error
- * message showing where the differance is if content is not the
- * same.  Return 0 if files are the same. */
-int wh__fdcmp(int fd0, int fd1);
-
-/* IOE stands for Input, Output, Error.  IN, OUT and ERR are optional
- * paths to files used as stdin, stdou and stderr, can be ommited by
- * setting them to NULL.  Function will run CMD command with IN file
- * content if given and test if stdout is equal to content of OUT file
- * if given, same for ERR and will compare CODE expected program exit
- * code with actuall CMD exit code.  Return 0 on failure. */
-int wh__ioe(char *cmd, char *in, char *out, char *err, int code);
+/* Test CMD.  IN, OUT and ERR are optional paths to files used as
+ * stdin, stdou and stderr, can be ommited by setting them to NULL.
+ * Function will run CMD command with IN file content if given and
+ * test if stdout is equal to content of OUT file if given, same for
+ * ERR and will compare CODE expected program exit code with actuall
+ * CMD exit code.  Return 0 on failure. */
+int _wh_run(char *cmd, char *in, char *out, char *err, int code);
 
 /* Definitions ==================================================== */
 
 int
-wh__bufncmp(char *buf0, char *buf1, ssize_t siz)
+_wh_cmp(char *a, char *b, ssize_t siz)
 {
-	ssize_t i;
-	for (i = 0; i < siz; i++) {
-		if (buf0[i] != buf1[i]) {
-			return i; /* BUffers not equal, show where */
-		}
-	}
-	return -1;		/* Buffers are equal */
+	ssize_t i = 0;
+	while (i < siz && a[i] == b[i]) i++;
+	return i < siz ? i : -1;
 }
 
 int
-wh__fdcmp(int fd0, int fd1)
+_wh_fdcmp(int fd0, int fd1)
 {
 	int show;		/* How many bytes print on error */
 	ssize_t diff=-1;	/* FD0 difference index, -1 no diff */
@@ -243,7 +238,7 @@ wh__fdcmp(int fd0, int fd1)
 		}
 		/* Compare buffers.  Set DIFF to index of BUF0 when
 		 * difference was found. */
-		if ((diff = wh__bufncmp(buf0, buf1, siz0)) >= 0) {
+		if ((diff = _wh_cmp(buf0, buf1, siz0)) >= 0) {
 			break;
 		}
 		sum += siz0;
@@ -270,7 +265,7 @@ wh__fdcmp(int fd0, int fd1)
 }
 
 char **
-wh__malloc_split(char *str, char split)
+_wh_malloc_split(char *str, char split)
 {
 	char *buf;		/* Buffer for all array strings. */
 	char **res;		/* Result, array of strings */
@@ -305,7 +300,7 @@ wh__malloc_split(char *str, char split)
 }
 
 int
-wh__ioe(char *cmd, char *in, char *out, char *err, int code)
+_wh_run(char *cmd, char *in, char *out, char *err, int code)
 {
 	int fd;			/* File desciptor for in, out, err */
 	int fd_in[2];		/* File desciptors for input pipe */
@@ -316,7 +311,7 @@ wh__ioe(char *cmd, char *in, char *out, char *err, int code)
 	char buf[BUFSIZ];	/* For passing stdin to PID IN pipe */
 	ssize_t ssiz;		/* Signed size, to read bytes */
 	char **args;		/* Array of CMD program args */
-	args = wh__malloc_split(cmd, ' ');
+	args = _wh_malloc_split(cmd, ' ');
 	/* Open pipes.  We need pipe for stdin, stdout and asderr. */
 	if (pipe(fd_in)  == -1) { perror("pipe(fd_in)");  return 1; }
 	if (pipe(fd_out) == -1) { perror("pipe(fd_out)"); return 1; }
@@ -397,7 +392,7 @@ wh__ioe(char *cmd, char *in, char *out, char *err, int code)
 			perror("open(out)");
 			return 0;
 		}
-		if (wh__fdcmp(fd_out[0], fd)) {
+		if (_wh_fdcmp(fd_out[0], fd)) {
 			return 0;
 		}
 		if (close(fd) == -1) {
@@ -414,7 +409,7 @@ wh__ioe(char *cmd, char *in, char *out, char *err, int code)
 			perror("open(err)");
 			return 0;
 		}
-		if (wh__fdcmp(fd_err[0], fd)) {
+		if (_wh_fdcmp(fd_err[0], fd)) {
 			return 0;
 		}
 		if (close(fd) == -1) {
@@ -445,9 +440,9 @@ main(int argc, char **argv)
 	int i;
 	while ((i = getopt(argc, argv, "vqfh")) != -1) {
 		switch (i) {
-		case 'v': wh__.flag |= WH_V; break;
-		case 'q': wh__.flag |= WH_Q; break;
-		case 'f': wh__.flag |= WH_F; break;
+		case 'v': _wh.flag |= _WH_V; break;
+		case 'q': _wh.flag |= _WH_Q; break;
+		case 'f': _wh.flag |= _WH_F; break;
 		case 'h':
 		default:
 			fprintf(stderr, "usage: %s [-vqh]\n\n"
@@ -460,17 +455,17 @@ main(int argc, char **argv)
 		}
 	}
 	/* Run tests.  Print error on fail. */
-	for (i = 0; i < wh__.all; i++) {
-		if ((wh__.flag & WH_O) && wh__.type[i] != WH_ONLY) {
+	for (i = 0; i < _wh.all; i++) {
+		if ((_wh.flag & _WH_O) && _wh.type[i] != _WH_ONLY) {
 			continue;
 		}
-		if (wh__.type[i] == WH_SKIP) {
-			fprintf(stderr, "%s:%d: note:\tSKIP %s\n",
-				wh__.fname, wh__.line[i], wh__.msg[i]);
+		if (_wh.type[i] == _WH_SKIP) {
+			fprintf(stderr, "%s:%d:\tSKIP %s\n",
+				_wh.fname, _wh.line[i], _wh.msg[i]);
 			continue;
 		}
-		wh__.last_all = 0;
-		wh__.last_err = 0;
+		_wh.last_all = 0;
+		_wh.last_err = 0;
 		/* TODO(irek): Printing extra fail data, like in case
 		 * of str_eq should happen before printing line with
 		 * error message pointing to file and assertion line.
@@ -480,34 +475,34 @@ main(int argc, char **argv)
 		 * failed you don't rly know where an why.  You know
 		 * it at the moment when it fails so it's much better
 		 * to print error right away. */
-		(*wh__.its[i])(); /* Run test, print assert fails */
-		if (wh__.last_err) {
-			wh__.err++;
-			fprintf(stderr, "%s:%d: error:\t%s %s\n",
-				wh__.fname,
-				wh__.line[i],
-				wh__type[wh__.type[i]],
-				wh__.msg[i]);
+		(*_wh.its[i])(); /* Run test, print assert fails */
+		if (_wh.last_err) {
+			_wh.err++;
+			fprintf(stderr, "%s:%d:\t%s %s\n",
+				_wh.fname,
+				_wh.line[i],
+				_wh_type[_wh.type[i]],
+				_wh.msg[i]);
 		}
-		if (wh__.flag & WH_V) {
+		if (_wh.flag & _WH_V) {
 			printf("%s %s\t(%d/%d) pass\n",
-			       wh__type[wh__.type[i]],
-			       wh__.msg[i],
-			       wh__.last_all - wh__.last_err,
-			       wh__.last_all);
+			       _wh_type[_wh.type[i]],
+			       _wh.msg[i],
+			       _wh.last_all - _wh.last_err,
+			       _wh.last_all);
 		}
-		if (wh__.flag & WH_F && wh__.last_err) {
+		if (_wh.flag & _WH_F && _wh.last_err) {
 			break;
 		}
 	}
 	/* Print verbose summary or errors if occured. */
-	if (wh__.flag & WH_V) {
-		printf("FILE %s\t(%d/%d) pass\n", wh__.fname,
-		       wh__.all - wh__.err, wh__.all);
-	} else if (wh__.err) {
-		fprintf(stderr, "%s\t%d err\n", wh__.fname, wh__.err);
+	if (_wh.flag & _WH_V) {
+		printf("FILE %s\t(%d/%d) pass\n", _wh.fname,
+		       _wh.all - _wh.err, _wh.all);
+	} else if (_wh.err) {
+		fprintf(stderr, "%s\t%d err\n", _wh.fname, _wh.err);
 	}
-	return wh__.err;
+	return _wh.err;
 }
 /*
 This software is available under 2 licenses, choose whichever.
