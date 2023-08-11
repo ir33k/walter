@@ -239,15 +239,6 @@ main(int argc, char **argv)
 		}
 		_wh.last_all = 0;
 		_wh.last_err = 0;
-		/* TODO(irek): Printing extra fail data, like in case
-		 * of str_eq should happen before printing line with
-		 * error message pointing to file and assertion line.
-		 * This is because some assertions might be able to
-		 * print error only during runtime.  For example while
-		 * reading file.  Later when you know that assertion
-		 * failed you don't rly know where an why.  You know
-		 * it at the moment when it fails so it's much better
-		 * to print error right away. */
 		(*_wh.fn[i])();	/* Run test, print assert fails */
 		if (_wh.last_err) {
 			_wh.err++;
