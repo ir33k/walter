@@ -1,4 +1,4 @@
-/* Only ONLY() tests should run. */
+/** Only ONLY() tests should run. */
 
 #include "walter.h"
 

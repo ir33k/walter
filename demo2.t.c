@@ -1,4 +1,4 @@
-/* All tests should fail. */
+/** All tests should fail. */
 
 #include <string.h>
 #include "walter.h"
@@ -44,16 +44,21 @@ TEST("numbers")
 
 TEST("strings")
 {
-	char  *str = "Lorem ipsum";
+	char *str = "Lorem ipsum";
 
-	STR_NEQ("Lorem ipsum", "Lorem ipsum");
-	STR_NEQ(str, "Lorem ipsum");
-	STR_NEQ(str, str);
-	STR_NEQ(NULL, NULL);
+	SNEQ("Lorem ipsum", "Lorem ipsum");
+	SNEQ(str, "Lorem ipsum");
+	SNEQ(str, str);
+	SNEQ(NULL, NULL);
 
-	STR_EQ(str, NULL);
-	STR_EQ("Lorem ipsum", NULL);
-	STR_EQ("Lorem ipsum", "test");
+	SEQ(str, NULL);
+	SEQ("Lorem ipsum", NULL);
+	SEQ("Lorem ipsum", "test");
+	SEQ("Lorem ipsum", "Lorem ipsumm");
+	SEQ("Lorem ipsum", "lorem ipsum");
+
+	SEQ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.",
+	    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.");
 }
 
 TEST("buffers")
@@ -63,15 +68,15 @@ TEST("buffers")
 
 	strncpy(buf, str, 16);
 
-	BUF_NEQ("Lorem ipsum", "Lorem ipsum", 10);
-	BUF_NEQ(str, str, strlen(str));
-	BUF_NEQ(buf, buf, 16);
-	BUF_NEQ(buf, buf, 4);
-	BUF_NEQ(buf, str, 4);
+	NEQ("Lorem ipsum", "Lorem ipsum", 10);
+	NEQ(str, str, strlen(str));
+	NEQ(buf, buf, 16);
+	NEQ(buf, buf, 4);
+	NEQ(buf, str, 4);
 
-	BUF_EQ("Lorem ipsum", "Lorem  psum", 10);
-	BUF_EQ(str, "Lorem ipsum", 8);
-	BUF_EQ(buf, "Lorem ipsum", 8);
+	EQ("Lorem ipsum", "Lorem  psum", 10);
+	EQ(str, "Lorem ipsum", 8);
+	EQ(buf, "Lorem ipsum", 8);
 }
 
 TEST("flow")

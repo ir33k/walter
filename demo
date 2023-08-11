@@ -1,8 +1,10 @@
 #!/usr/bin/env sh
 # Run demo test files
-
-cc -o demo0.t demo0.t.c && ./demo0.t
-cc -o demo1.t demo1.t.c && ./demo1.t -v
-cc -o demo2.t demo2.t.c && ./demo2.t -q
-cc -o demo3.t demo3.t.c && ./demo3.t -vq
-cc -o demo4.t demo4.t.c && ./demo4.t
+set -ex # Stop on first error and log all commands
+./build
+./demo0.t
+./demo1.t -v
+./demo2.t -q
+./demo3.t -vq
+./demo4.t
+./demo5.t

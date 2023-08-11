@@ -12,18 +12,17 @@
  *	TEST("Test message")            // Define test with assertions
  *	{
  *		// Basic assertions
- *		OK(bool);               // Is boolean true?
- *		EQ(a, b);               // Are values equal?
  *		ASSERT(bool, "msg");    // Print message on false
- *		STR_EQ(s1, s2);         // Are strings equal?
- *		BUF_EQ(b1, b2, size);   // Are buffers equal?
+ *		OK(bool);               // Is boolean true?
+ *		EQ(b1, b2, size);       // Are buffers equal?
+ *		NEQ(b1, b2, size);      // Are buffers not equal?
+ *		SEQ(s1, s2);            // Are strings equal?
+ *		SNEQ(s1, s2);           // Are strings not equal?
  *		END();                  // End test here
- *		STR_NEQ(s1, s2);        // Are strings not equal?
- *		BUF_NEQ(b1, b2, size);  // Are buffers not equal?
  *
  *		// Run CMD with IN standard input expecting OUT
  *		// standard output and ERR standard error and CODE
- *              // exit code.  When file path for IN, OUT, ERR are
+ *		// exit code.  When file path for IN, OUT, ERR are
  *		// NULL then this part of input/output is ignored.
  *		//
  *		//   CMD          IN        OUT        ERR       CODE
@@ -37,7 +36,7 @@
  *		// instead of paths to files with expected stdin,
  *		// stdout and stderr.  All 3 values can be omitted
  *		// with NULL.
- *		STR_RUN("tr abc 123", "AaBbCc", "A1B2C3", 0, 0);
+ *		SRUN("tr abc 123", "AaBbCc", "A1B2C3", 0, 0);
  *	}
  *	TEST("Another test 1") { ... }  // Define as many as WH_MAX
  *	SKIP("Another test 2") { ... }  // Skip or just ignore test
@@ -57,7 +56,7 @@
  * global tests state, it defines it's own "main" function and TEST
  * macro relays on file line numbers.
  *
- * By default You can define only 64 tests but this can be changed by
+ * By default you can define only 64 tests but this can be changed by
  * predefining WH_MAX (see example).  Variables, functions and macros
  * not mentioned in example test program should not be used.
  *
@@ -87,19 +86,20 @@
 #define WH_SHOW 32		/* when file comperation fail, RUN. */
 #endif				/* Predefine for different amount.  */
 
-#define WH_IN	"/tmp/walter.h.in"
-#define WH_OUT	"/tmp/walter.h.out"
-#define WH_ERR	"/tmp/walter.h.err"
+#define WH_NUL	"<NULL>"	/* How to represent NULL value */
+#define WH_IN	"/tmp/__wh.in"	/* Temporary file for stdin mock */
+#define WH_OUT	"/tmp/__wh.out"	/* Temporary file for stdout mock */
+#define WH_ERR	"/tmp/__wh.err"	/* Temporary file for stderr mock */
 
-#define __WH_BASE(_msg, id, _line, _type)                            \
-	void __wh_test_body##id(void);                               \
+#define __WH_CORE(_msg, _id, _line, _type)                           \
+	void __wh_test_body##_id(void);                              \
 	/* This function will run before "main" function. */         \
-	void __wh_test##id(void) __attribute__ ((constructor));      \
-	void __wh_test##id(void) {                                   \
+	void __wh_test##_id(void) __attribute__ ((constructor));     \
+	void __wh_test##_id(void) {                                  \
 		/* Init on first TEST(). */                          \
 		if (_wh.all == 0) _wh.fname = __FILE__;              \
 		if (_type == _WH_ONLY) _wh.flag |= _WH_O;            \
-		_wh.its[_wh.all] = &__wh_test_body##id;              \
+		_wh.fn[_wh.all] = &__wh_test_body##_id;              \
 		_wh.msg[_wh.all] = _msg;                             \
 		_wh.line[_wh.all] = _line;                           \
 		_wh.type[_wh.all] = _type;                           \
@@ -108,74 +108,59 @@
 		fprintf(stderr, "ERR exceeded WH_MAX (see doc)\n");  \
 		exit(1);        /* Too many tests */                 \
 	}                                                            \
-	void __wh_test_body##id(void)
+	void __wh_test_body##_id(void)
 
-/* Intermediate macro function _WH_BASE is necessary to "unwrap"
+/* Intermediate macro function _WH_CORE is necessary to "unwrap"
  * __LINE__ macro so it could be used as a ID string. */
-#define _WH_BASE(msg, id, type) __WH_BASE(msg, id, __LINE__, type)
+#define _WH_CORE(msg, id, type) __WH_CORE(msg, id, __LINE__, type)
 
 /* Main test macros for defining test blocks. */
-#define TEST(msg) _WH_BASE(msg, __LINE__, _WH_TEST)
-#define SKIP(msg) _WH_BASE(msg, __LINE__, _WH_SKIP)
-#define ONLY(msg) _WH_BASE(msg, __LINE__, _WH_ONLY)
+#define TEST(msg) _WH_CORE(msg, __LINE__, _WH_TEST)
+#define SKIP(msg) _WH_CORE(msg, __LINE__, _WH_SKIP)
+#define ONLY(msg) _WH_CORE(msg, __LINE__, _WH_ONLY)
 
 /* Core assertion macro that every other assertion macro use. */
-#define __WH_ASSERT(bool, onfail, line) do {                         \
+#define _WH_ASSERT(_bool, _msg, _line) do {                          \
 		_wh.last_all++;                                      \
-		if (bool) break;                /* Pass */           \
+		if ((_bool)) break;             /* Pass */           \
 		_wh.last_err++;                 /* Fail */           \
-		fprintf(stderr, "%s:%d:\t", _wh.fname, line);        \
-		onfail;                                              \
-		fputc('\n', stderr);                                 \
+		fprintf(stderr, "%s:%d:\t%s\n",                      \
+			_wh.fname, _line, _msg);                     \
 		if (_wh.flag & _WH_Q) return;   /* End quick */      \
 	} while(0)
-
-/* Helper assertion macros. */
-#define _WH_ASSERT(bool, onfail) __WH_ASSERT(bool, onfail, __LINE__)
-#define _WH_STR_EQ(a,b) ((a && b && !strcmp(a?a:"", b?b:"")) || (!a && !b))
-#define _WH_BUF_EQ(a,b,n) (strncmp(a,b,n) == 0)
+#define ASSERT(a,msg) _WH_ASSERT(a, msg, __LINE__)
 
 /* Basic assertions. */
-#define ASSERT(x,msg) _WH_ASSERT(x, fputs(msg, stderr))
-#define OK(x) ASSERT(x, "OK("#x")")
-#define EQ(a,b) ASSERT((a) == (b), "EQ("#a", "#b")")
-#define STR_EQ(a,b) _WH_ASSERT(_WH_STR_EQ(a,b),				\
-			       fprintf(stderr, "STR_EQ(%s, %s)\n"	\
-				       "\t'%s'\n\t'%s'",		\
-				       #a, #b,				\
-				       a?a:"<NULL>", b?b:"<NULL>"))
-#define BUF_EQ(a,b,n) _WH_ASSERT(_WH_BUF_EQ(a,b,n),			\
-				 fprintf(stderr, "BUF_EQ(%s, %s, %s)\n"	\
-					 "\t'%.*s'\n\t'%.*s'",		\
-					 #a, #b, #n,			\
-					 (int)n, a, (int)n, b))
-#define STR_NEQ(a,b)   ASSERT(!_WH_STR_EQ(a,b),   "STR_NEQ("#a", "#b")")
-#define BUF_NEQ(a,b,n) ASSERT(!_WH_BUF_EQ(a,b,n), "BUF_NEQ("#a", "#b", "#n")")
+#define OK(a)      ASSERT((a),               "OK("#a")")
+#define EQ(a,b,n)  ASSERT(_wh_eq(1,a,b,n,n), "EQ("#a", "#b", "#n")")
+#define NEQ(a,b,n) ASSERT(_wh_eq(0,a,b,n,n), "NEQ("#a", "#b", "#n")")
+#define SEQ(a,b)   ASSERT(_wh_seq(1,a,b),    "SEQ("#a", "#b")")
+#define SNEQ(a,b)  ASSERT(_wh_seq(0,a,b),    "SNEQ("#a", "#b")")
+
+/* Run CMD assertions. */
+#define RUN(cmd, in, out, err, code)                            \
+	ASSERT(_wh_run(cmd, in, out, err, code),                \
+	       "RUN("#cmd", "#in", "#out", "#err", "#code")")
+#define SRUN(cmd, in, out, err, code)                           \
+	ASSERT(_wh_srun(cmd, in, out, err, code),               \
+	       "SRUN("#cmd", "#in", "#out", "#err", "#code")")
 
 /* Force end of test block. */
 #define END() do {return;} while(0)
 
-/* Run CMD assertions. */
-#define RUN(cmd, in, out, err, code)				\
-	ASSERT(_wh_run(cmd, in, out, err, code),		\
-	       "RUN("#cmd", "#in", "#out", "#err", "#code")")
-#define STR_RUN(cmd, in, out, err, code)			\
-	ASSERT(_wh_str_run(cmd, in, out, err, code),		\
-	       "STR_RUN("#cmd", "#in", "#out", "#err", "#code")")
-
-enum {				/* Flags */
-	_WH_V = 1,		/* Verbose mode */
-	_WH_Q = 2,		/* Quick mode */
-	_WH_F = 4,		/* Fast mode */
-	_WH_O = 8		/* ONLY test macro was used */
+enum {                          /* Flags */
+	_WH_V = 1,              /* Verbose mode */
+	_WH_Q = 2,              /* Quick mode */
+	_WH_F = 4,              /* Fast mode */
+	_WH_O = 8               /* ONLY test macro was used */
 };
-enum {				/* Test macro types */
-	_WH_TEST = 0,		/* Regular test */
-	_WH_SKIP,		/* Skip test */
-	_WH_ONLY,		/* Run only ONLY tests */
-	__WH_SIZ		/* For _wh_type array size */
+enum {                          /* Test macro types */
+	_WH_TEST = 0,           /* Regular test */
+	_WH_SKIP,               /* Skip test */
+	_WH_ONLY,               /* Run only ONLY tests */
+	__WH_SIZ                /* For _wh_type array size */
 };
-struct {			/* Tests global state */
+struct {                        /* Tests global state */
 	char  *fname;           /* Test source file name */
 	int    flag;            /* Program flags, enum _WH_V... */
 	int    all;             /* Number of all tests */
@@ -185,25 +170,26 @@ struct {			/* Tests global state */
 	int    line[WH_MAX];    /* TEST macros line in file */
 	int    type[WH_MAX];    /* Test type enum WH_SKIP... */
 	char  *msg[WH_MAX];     /* TEST macro messages */
-	void (*its[WH_MAX])();	/* Test functions pointers */
-} _wh = {0, 0, 0, 0, 0, 0, {0}, {0}, {0}, {0}};
+	void (*fn[WH_MAX])();	/* Test functions pointers */
+} _wh = {0};
 
 /* String representations of test macro types. */
 const char *_wh_type[__WH_SIZ] = {"TEST", "SKIP", "ONLY"};
 
-/* Compare A and B buffers content of SIZ size.  Return index to
- * first byte that is different or -1 when buffers are the same. */
-int _wh_cmp(char *a, char *b, ssize_t siz);
+/* Compare buffers BUF0 and BUF1 of SIZ size.  Return non 0 value when
+ * EQ value is 1 and buffers are the same, or when EQ value is 0 and
+ * buffers are different. */
+int _wh_eq(int eq, char *buf0, char *buf1, size_t siz0, size_t size1);
+
+/* Compare strings STR0 and STR1.  Return non 0 value when EQ value is
+ * 1 and strings are the same, or when EQ value is 0 and strings are
+ * different. */
+int _wh_seq(int eq, char *str0, char *str1);
 
 /* Compare files pointed by FD0 and FD1 file desciptors.  Print error
  * message showing where the differance is if content is not the
  * same.  Return 0 when files are the same. */
 int _wh_fdcmp(int fd0, int fd1);
-
-/* Split STR string with SPLIT char.  Return array of null terminated
- * strings with NULL being last array element.  Original STR string
- * will not be modified. */
-char **_wh_split(char *str, char split);
 
 /* Test CMD.  IN, OUT and ERR are optional paths to files used as
  * stdin, stdou and stderr, can be ommited by setting them to NULL.
@@ -215,7 +201,7 @@ int _wh_run(char *cmd, char *in, char *out, char *err, int code);
 
 /* Works the same as _wh_run but IN, OUT and ERR are not paths to
  * files but strings. */
-int _wh_str_run(char *cmd, char *in, char *out, char *err, int code);
+int _wh_srun(char *cmd, char *in, char *out, char *err, int code);
 
 /* Runs tests defined with TEST, SKIP and ONLY macros.
  * Return number of failed tests or 0 on success. */
@@ -237,7 +223,7 @@ main(int argc, char **argv)
 				"\t-f\tFast, exit program on first"
 				" failed test.\n"
 				"\t-h\tPrints this help message.\n",
-			       argv[0]);
+				argv[0]);
 			return 1;
 		}
 	}
@@ -262,7 +248,7 @@ main(int argc, char **argv)
 		 * failed you don't rly know where an why.  You know
 		 * it at the moment when it fails so it's much better
 		 * to print error right away. */
-		(*_wh.its[i])(); /* Run test, print assert fails */
+		(*_wh.fn[i])();	/* Run test, print assert fails */
 		if (_wh.last_err) {
 			_wh.err++;
 			fprintf(stderr, "%s:%d:\t%s %s\n",
@@ -272,11 +258,11 @@ main(int argc, char **argv)
 				_wh.msg[i]);
 		}
 		if (_wh.flag & _WH_V) {
-			printf("%s %s\t(%d/%d) pass\n",
-			       _wh_type[_wh.type[i]],
-			       _wh.msg[i],
-			       _wh.last_all - _wh.last_err,
-			       _wh.last_all);
+			fprintf(stdout, "%s %s\t(%d/%d) pass\n",
+				_wh_type[_wh.type[i]],
+				_wh.msg[i],
+				_wh.last_all - _wh.last_err,
+				_wh.last_all);
 		}
 		if (_wh.flag & _WH_F && _wh.last_err) {
 			break;
@@ -284,8 +270,8 @@ main(int argc, char **argv)
 	}
 	/* Print verbose summary or errors if occured. */
 	if (_wh.flag & _WH_V) {
-		printf("FILE %s\t(%d/%d) pass\n", _wh.fname,
-		       _wh.all - _wh.err, _wh.all);
+		fprintf(stdout, "FILE %s\t(%d/%d) pass\n", _wh.fname,
+			_wh.all - _wh.err, _wh.all);
 	} else if (_wh.err) {
 		fprintf(stderr, "%s\t%d err\n", _wh.fname, _wh.err);
 	}
@@ -293,18 +279,45 @@ main(int argc, char **argv)
 }
 
 int
-_wh_cmp(char *a, char *b, ssize_t siz)
+_wh_eq(int eq, char *buf0, char *buf1, size_t siz0, size_t siz1)
 {
-	ssize_t i = 0;
-	while (i < siz && a[i] == b[i]) i++;
-	return i < siz ? i : -1;
+	size_t i=0, offset;
+	if (!buf0 || !buf1) {	/* Handle nulls */
+		if ((buf0 == buf1) == eq) {
+			return 1;
+		}
+	} else {
+		while (i<siz0 && i<siz1 && buf0[i] == buf1[i]) i++;
+		if ((buf0[i-1] == buf1[i-1] && siz0 == i && siz1 == i) == eq) {
+			return 1;
+		}
+	}
+	offset = i/WH_SHOW * WH_SHOW;
+	buf0 += offset;
+	siz0 -= offset;
+	buf1 += offset;
+	siz1 -= offset;
+	fprintf(stderr,
+		"\t %*s byte %lu\n"
+		"\t'%.*s'\n"
+		"\t'%.*s'\n",
+		(int)(i-offset)+1, "v", i,
+		(int)(WH_SHOW < siz0 ? WH_SHOW : siz0), buf0 ? buf0 : WH_NUL,
+		(int)(WH_SHOW < siz1 ? WH_SHOW : siz1), buf1 ? buf1 : WH_NUL);
+	return 0;
+}
+
+int
+_wh_seq(int eq, char *str0, char *str1)
+{
+	size_t siz0 = str0 ? strlen(str0) : 0;
+	size_t siz1 = str1 ? strlen(str1) : 0;
+	return _wh_eq(eq, str0, str1, siz0, siz1);
 }
 
 int
 _wh_fdcmp(int fd0, int fd1)
 {
-	int show;		/* How many bytes print on error */
-	ssize_t diff=-1;	/* FD0 difference index, -1 no diff */
 	ssize_t sum=0;		/* Sum of read bytes */
 	ssize_t siz0, siz1;	/* Size of read buffer */
 	char buf0[BUFSIZ];	/* Buffer for reading from fd0 */
@@ -315,20 +328,17 @@ _wh_fdcmp(int fd0, int fd1)
 		 * leas be able to read from FD1 and SIZ0 and SIZ1
 		 * should be the same. */
 		if ((siz1 = read(fd1, buf1, siz0)) == -1) {
-			/* TODO(irek): Instead of returning diff I
-			 * should print error as soon as as it was
-			 * found.  Mayber? */
-			diff = 0;
-			break;
+			if (!_wh_eq(1, buf0, 0, siz0, 0)) {
+				return 1;
+			}
+			/* Preceding condition should always be true.
+			 * But just in case to catch unforeseen edge
+			 * case I have this message. */
+			fprintf(stderr, "ERROR: unreachable %d\n", __LINE__);
+			return 1;
 		}
-		/* Compare buffers.  Set DIFF to index of BUF0 when
-		 * difference was found. */
-		if ((diff = _wh_cmp(buf0, buf1, siz0)) >= 0) {
-			break;
-		}
-		if (siz0 != siz1) {
-			diff = siz0 < siz1 ? siz0 : siz1;
-			break;
+		if (!_wh_eq(1, buf0, buf1, siz0, siz1)) {
+			return 1;
 		}
 		sum += siz0;
 	}
@@ -336,18 +346,14 @@ _wh_fdcmp(int fd0, int fd1)
 	 * still hold more data.  If difference was not found at this
 	 * point then check if there is still something in BUF1 which
 	 * means buffers are different at last position of BUF0. */
-	if (diff == -1 && (siz1 = read(fd1, buf1, BUFSIZ)) > 0) {
-		diff = siz0;
-	}
-	/* When diff is a valid BUFF0 index (not -1) then we found
-	 * difference at that index.  If so then print WH_SHOW amount
-	 * of bytes (if possible because there might be less bytes
-	 * available) up to the DIFF index showing where is first
-	 * difference along with index to that byte. */
-	if (diff >= 0) {
-		show = (diff > WH_SHOW ? WH_SHOW : diff);
-		fprintf(stderr, "\t'%.*s' < difference at byte %ld\n",
-			show, &buf0[diff-show+1], sum+diff);
+	if ((siz1 = read(fd1, buf1, BUFSIZ)) > 0) {
+		if (!_wh_eq(1, 0, buf1, 0, siz1)) {
+			return 1;
+		}
+		/* Preceding condition should always be true.  But
+		 * just in case to catch unforeseen edge case I have
+		 * this message. */
+		fprintf(stderr, "ERROR: unreachable %d\n", __LINE__);
 		return 1;
 	}
 	return 0;
@@ -450,7 +456,7 @@ _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 }
 
 int
-_wh_str_run(char *cmd, char *sin, char *sout, char *serr, int code)
+_wh_srun(char *cmd, char *sin, char *sout, char *serr, int code)
 {
 	FILE *fp;
 	if (sin) {

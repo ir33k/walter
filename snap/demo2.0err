@@ -20,35 +20,80 @@ demo2.t.c:40:	OK(1.23 == -1.23)
 demo2.t.c:41:	OK(0.3 == 0.1 + 0.2)
 demo2.t.c:42:	OK(fnum == num)
 demo2.t.c:23:	TEST numbers
-demo2.t.c:49:	STR_NEQ("Lorem ipsum", "Lorem ipsum")
-demo2.t.c:50:	STR_NEQ(str, "Lorem ipsum")
-demo2.t.c:51:	STR_NEQ(str, str)
-demo2.t.c:52:	STR_NEQ(NULL, NULL)
-demo2.t.c:54:	STR_EQ(str, NULL)
+	            v byte 11
 	'Lorem ipsum'
-	'<NULL>'
-demo2.t.c:55:	STR_EQ("Lorem ipsum", NULL)
 	'Lorem ipsum'
-	'<NULL>'
-demo2.t.c:56:	STR_EQ("Lorem ipsum", "test")
+demo2.t.c:49:	SNEQ("Lorem ipsum", "Lorem ipsum")
+	            v byte 11
+	'Lorem ipsum'
+	'Lorem ipsum'
+demo2.t.c:50:	SNEQ(str, "Lorem ipsum")
+	            v byte 11
+	'Lorem ipsum'
+	'Lorem ipsum'
+demo2.t.c:51:	SNEQ(str, str)
+	 v byte 0
+	''
+	''
+demo2.t.c:52:	SNEQ(NULL, NULL)
+	 v byte 0
+	'Lorem ipsum'
+	''
+demo2.t.c:54:	SEQ(str, NULL)
+	 v byte 0
+	'Lorem ipsum'
+	''
+demo2.t.c:55:	SEQ("Lorem ipsum", NULL)
+	 v byte 0
 	'Lorem ipsum'
 	'test'
+demo2.t.c:56:	SEQ("Lorem ipsum", "test")
+	            v byte 11
+	'Lorem ipsum'
+	'Lorem ipsumm'
+demo2.t.c:57:	SEQ("Lorem ipsum", "Lorem ipsumm")
+	 v byte 0
+	'Lorem ipsum'
+	'lorem ipsum'
+demo2.t.c:58:	SEQ("Lorem ipsum", "lorem ipsum")
+	                           v byte 122
+	'din. Cras sit amet ligula sapien'
+	'din. Cras sit amet ligula Sapien'
+demo2.t.c:60:	SEQ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.")
 demo2.t.c:45:	TEST strings
-demo2.t.c:66:	BUF_NEQ("Lorem ipsum", "Lorem ipsum", 10)
-demo2.t.c:67:	BUF_NEQ(str, str, strlen(str))
-demo2.t.c:68:	BUF_NEQ(buf, buf, 16)
-demo2.t.c:69:	BUF_NEQ(buf, buf, 4)
-demo2.t.c:70:	BUF_NEQ(buf, str, 4)
-demo2.t.c:72:	BUF_EQ("Lorem ipsum", "Lorem  psum", 10)
+	           v byte 10
+	'Lorem ipsu'
+	'Lorem ipsu'
+demo2.t.c:71:	NEQ("Lorem ipsum", "Lorem ipsum", 10)
+	        v byte 39
+	' hurts.'
+	' hurts.'
+demo2.t.c:72:	NEQ(str, str, strlen(str))
+	                 v byte 16
+	'The trick is not'
+	'The trick is not'
+demo2.t.c:73:	NEQ(buf, buf, 16)
+	     v byte 4
+	'The '
+	'The '
+demo2.t.c:74:	NEQ(buf, buf, 4)
+	     v byte 4
+	'The '
+	'The '
+demo2.t.c:75:	NEQ(buf, str, 4)
+	       v byte 6
 	'Lorem ipsu'
 	'Lorem  psu'
-demo2.t.c:73:	BUF_EQ(str, "Lorem ipsum", 8)
+demo2.t.c:77:	EQ("Lorem ipsum", "Lorem  psum", 10)
+	 v byte 0
 	'The tric'
 	'Lorem ip'
-demo2.t.c:74:	BUF_EQ(buf, "Lorem ipsum", 8)
+demo2.t.c:78:	EQ(str, "Lorem ipsum", 8)
+	 v byte 0
 	'The tric'
 	'Lorem ip'
-demo2.t.c:59:	TEST buffers
-demo2.t.c:79:	Custom fail message
-demo2.t.c:77:	TEST flow
+demo2.t.c:79:	EQ(buf, "Lorem ipsum", 8)
+demo2.t.c:64:	TEST buffers
+demo2.t.c:84:	Custom fail message
+demo2.t.c:82:	TEST flow
 demo2.t.c	5 err

@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+set -ex # Stop on first error and log all commands
+
+CC="cc"
+CFLAGS="-Wall -Wextra -Wshadow -Wmissing-declarations -Wswitch-enum -pedantic -std=c89"
+
+cc -o walter.t walter.t.c
+cc -o demo0.t demo0.t.c
+cc -o demo1.t demo1.t.c
+cc -o demo2.t demo2.t.c
+cc -o demo3.t demo3.t.c
+cc -o demo4.t demo4.t.c
+cc -o demo5.t demo5.t.c

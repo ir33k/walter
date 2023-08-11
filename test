@@ -1,9 +1,5 @@
 #!/usr/bin/env sh
 # Test walter.h by checking if demos return expected result.
-
-CC="cc"
-# -fsanitize=undefined,address
-CFLAGS="-Wall -Wextra -Wshadow -Wmissing-declarations -Wswitch-enum -pedantic -std=c89"
-
-$CC $CFLAGS -o walter.t walter.t.c
+set -ex # Stop on first error and log all commands
+./build
 ./walter.t

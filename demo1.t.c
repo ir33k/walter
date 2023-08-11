@@ -1,4 +1,4 @@
-/* All tests should pass. */
+/** All tests should pass. */
 
 #include <string.h>
 #include "walter.h"
@@ -46,14 +46,14 @@ TEST("strings")
 {
 	char  *str = "Lorem ipsum";
 
-	STR_EQ("Lorem ipsum", "Lorem ipsum");
-	STR_EQ(str, "Lorem ipsum");
-	STR_EQ(str, str);
-	STR_EQ(NULL, NULL);
+	SEQ("Lorem ipsum", "Lorem ipsum");
+	SEQ(str, "Lorem ipsum");
+	SEQ(str, str);
+	SEQ(NULL, NULL);
 
-	STR_NEQ(str, NULL);
-	STR_NEQ("Lorem ipsum", NULL);
-	STR_NEQ("Lorem ipsum", "test");
+	SNEQ(str, NULL);
+	SNEQ("Lorem ipsum", NULL);
+	SNEQ("Lorem ipsum", "test");
 }
 
 TEST("buffers")
@@ -63,15 +63,15 @@ TEST("buffers")
 
 	strncpy(buf, str, 16);
 
-	BUF_EQ("Lorem ipsum", "Lorem ipsum", 10);
-	BUF_EQ(str, str, strlen(str));
-	BUF_EQ(buf, buf, 16);
-	BUF_EQ(buf, buf, 4);
-	BUF_EQ(buf, str, 4);
+	EQ("Lorem ipsum", "Lorem ipsum", 10);
+	EQ(str, str, strlen(str));
+	EQ(buf, buf, 16);
+	EQ(buf, buf, 4);
+	EQ(buf, str, 4);
 
-	BUF_NEQ("Lorem ipsum", "Lorem  psum", 10);
-	BUF_NEQ(str, "Lorem ipsum", 8);
-	BUF_NEQ(buf, "Lorem ipsum", 8);
+	NEQ("Lorem ipsum", "Lorem  psum", 10);
+	NEQ(str, "Lorem ipsum", 8);
+	NEQ(buf, "Lorem ipsum", 8);
 }
 
 TEST("flow")

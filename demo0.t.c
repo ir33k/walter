@@ -1,6 +1,7 @@
-/* Simple example of everything you need to know. */
+/** Simple examples of basic assertions. */
 
-/* Set max number of tests if you need more than 64. */
+/* Set max number of tests by defining TESTMAX before including
+ * walter.h if you need more than 64. */
 #define TESTMAX 128
 #include "walter.h"
 
@@ -12,11 +13,11 @@ TEST("All should pass")		/* Define test with assertions */
 
 	OK(bool);		/* Is boolean true? */
 	ASSERT(bool, "text");	/* OK() with custom message */
-	STR_EQ(str, "David");	/* Are strings equal? */
-	BUF_EQ(buf, "0045", 4);	/* Are buffers equal? */
+	SEQ(str, "David");	/* Are strings equal? */
+	EQ(buf, "0045", 4);	/* Are buffers equal? */
 
-	STR_NEQ(str, "Walter");	/* Are strings not equal? */
-	BUF_NEQ(buf, "123", 3);	/* Are buffers not equal? */
+	SNEQ(str, "Walter");	/* Are strings not equal? */
+	NEQ(buf, "123", 3);	/* Are buffers not equal? */
 
 	END();			/* Force test to end here */
 	ASSERT(0, "Fail");	/* Force fail in this line */
@@ -27,10 +28,11 @@ TEST("You shall not pass!")	/* All should fail */
 	OK(0);
 	OK(0.1 + 0.2 == 0.3);
 	OK(44 != 44);
-	STR_EQ("Lorem ipsum", "Lorem ipusm");
-	BUF_EQ("2345", "0045", 4);
-	STR_NEQ("Lorem ipsum", "Lorem ipsum");
-	BUF_NEQ("1234", "1234", 4);
+	SEQ("Lorem ipsum", "Lorem ipusm");
+	SEQ("Lorem ipsumm", "Lorem ipsum");
+	EQ("2345", "0045", 4);
+	SNEQ("Lorem ipsum", "Lorem ipsum");
+	NEQ("1234", "1234", 4);
 	ASSERT(0, "Custom fail message");
 }
 
@@ -94,6 +96,7 @@ SKIP("Not finished or just ignored test") {
  *	$ ./demo0.t -h              # Print usage help
  *	$ ./demo0.t                 # Run tests
  *	$ ./demo0.t -v              # Run in verbose mode
- *	$ ./demo0.t -q              # End quick on first fail
+ *	$ ./demo0.t -q              # End quick on first failed assertion
  *	$ ./demo0.t -vq             # Captain obvious
+ *	$ ./demo0.t -f              # End entire testing on first failed test
  */
