@@ -1,6 +1,6 @@
 /** Testing standard input, output, error and exit code of command. */
 
-#include "walter.h"
+#include "../walter.h"
 
 TEST("SRUN on UNIX tools")
 {

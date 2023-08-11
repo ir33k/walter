@@ -11,7 +11,7 @@
  */
 
 #include <string.h>
-#include "walter.h"
+#include "../walter.h"
 
 /**
  * Example 1

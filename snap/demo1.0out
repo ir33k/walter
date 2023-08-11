@@ -3,4 +3,4 @@ TEST numbers	(12/12) pass
 TEST strings	(7/7) pass
 TEST buffers	(8/8) pass
 TEST flow	(3/3) pass
-FILE demo1.t.c	(5/5) pass
+FILE demo/demo1.t.c	(5/5) pass

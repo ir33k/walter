@@ -1,2 +1,2 @@
-demo4.t.c:22:	OK(0)
-demo4.t.c:20:	ONLY This test will fail
+demo/demo4.t.c:22:	OK(0)
+demo/demo4.t.c:20:	ONLY This test will fail

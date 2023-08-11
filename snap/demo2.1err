@@ -1,16 +1,16 @@
-demo2.t.c:11:	OK(!bool_t)
-demo2.t.c:6:	TEST booleans
-demo2.t.c:28:	OK(123 != 123)
-demo2.t.c:23:	TEST numbers
+demo/demo2.t.c:11:	OK(!bool_t)
+demo/demo2.t.c:6:	TEST booleans
+demo/demo2.t.c:28:	OK(123 != 123)
+demo/demo2.t.c:23:	TEST numbers
 	            v byte 11
 	'Lorem ipsum'
 	'Lorem ipsum'
-demo2.t.c:49:	SNEQ("Lorem ipsum", "Lorem ipsum")
-demo2.t.c:45:	TEST strings
+demo/demo2.t.c:49:	SNEQ("Lorem ipsum", "Lorem ipsum")
+demo/demo2.t.c:45:	TEST strings
 	           v byte 10
 	'Lorem ipsu'
 	'Lorem ipsu'
-demo2.t.c:71:	NEQ("Lorem ipsum", "Lorem ipsum", 10)
-demo2.t.c:64:	TEST buffers
-demo2.t.c:84:	Custom fail message
-demo2.t.c:82:	TEST flow
+demo/demo2.t.c:71:	NEQ("Lorem ipsum", "Lorem ipsum", 10)
+demo/demo2.t.c:64:	TEST buffers
+demo/demo2.t.c:84:	Custom fail message
+demo/demo2.t.c:82:	TEST flow

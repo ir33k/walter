@@ -1,7 +1,7 @@
 /** All tests should fail. */
 
 #include <string.h>
-#include "walter.h"
+#include "../walter.h"
 
 TEST("booleans")
 {

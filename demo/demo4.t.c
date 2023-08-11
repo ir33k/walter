@@ -1,6 +1,6 @@
 /** Only ONLY() tests should run. */
 
-#include "walter.h"
+#include "../walter.h"
 
 TEST("This test will be ignored")
 {

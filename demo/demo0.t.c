@@ -3,7 +3,7 @@
 /* Set max number of tests by defining TESTMAX before including
  * walter.h if you need more than 64. */
 #define TESTMAX 128
-#include "walter.h"
+#include "../walter.h"
 
 TEST("All should pass")		/* Define test with assertions */
 {

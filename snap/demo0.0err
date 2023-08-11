@@ -1,4 +1,4 @@
-usage: ./demo0.t [-vqh]
+usage: ./demo/demo0.t [-vqh]
 
 	-v	Print verbose output.
 	-q	Quick, stop test on first failed assertion.

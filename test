@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-# Test walter.h by checking if demos return expected result.
-set -ex # Stop on first error and log all commands
-./build
-./walter.t
