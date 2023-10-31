@@ -1,7 +1,7 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications by avoiding boilerplate.
  *
- * walter.h v3.0 from https://github.com/ir33k/walter by irek@gabr.pl
+ * walter.h v3.1 from https://github.com/ir33k/walter by irek@gabr.pl
  *
  * Example usage:
  *
@@ -131,11 +131,11 @@
 #define ASSERT(a,msg) _WH_ASSERT(a, msg, __LINE__)
 
 /* Basic assertions. */
-#define OK(a)      ASSERT((a),               "OK("#a")")
+#define OK(a)      ASSERT((a), "OK("#a")")
 #define EQ(a,b,n)  ASSERT(_wh_eq(1,a,b,n,n), "EQ("#a", "#b", "#n")")
 #define NEQ(a,b,n) ASSERT(_wh_eq(0,a,b,n,n), "NEQ("#a", "#b", "#n")")
-#define SEQ(a,b)   ASSERT(_wh_seq(1,a,b),    "SEQ("#a", "#b")")
-#define SNEQ(a,b)  ASSERT(_wh_seq(0,a,b),    "SNEQ("#a", "#b")")
+#define SEQ(a,b)   ASSERT(_wh_seq(1,(char*)a,(char*)b), "SEQ("#a", "#b")")
+#define SNEQ(a,b)  ASSERT(_wh_seq(0,(char*)a,(char*)b), "SNEQ("#a", "#b")")
 
 /* Run CMD assertions. */
 #define RUN(cmd, in, out, err, code)                            \
@@ -283,15 +283,21 @@ _wh_eq(int eq, char *buf0, char *buf1, size_t siz0, size_t siz1)
 			return 1;
 		}
 	}
-	offset = i/WH_SHOW * WH_SHOW;
+	offset = i - (i % WH_SHOW);
 	buf0 += offset;
 	siz0 -= offset;
 	buf1 += offset;
 	siz1 -= offset;
 	fprintf(stderr,
 		"\t %*s byte %lu\n"
-		"\t'%.*s'\n"
-		"\t'%.*s'\n",
+		"\t\"%.*s\"\n"
+		"\t\"%.*s\"\n",
+		/* TODO(irek): This arrow to invalid character is not
+		 * very precise.  It's because if there will be white
+		 * character like \r or \t then it's impossible for me
+		 * to know where to put this arrow.  So maybe to avoid
+		 * confusions I should just have information about
+		 * byte index? */
 		(int)(i-offset)+1, "v", i,
 		(int)(WH_SHOW < siz0 ? WH_SHOW : siz0), buf0 ? buf0 : WH_NUL,
 		(int)(WH_SHOW < siz1 ? WH_SHOW : siz1), buf1 ? buf1 : WH_NUL);
@@ -309,7 +315,6 @@ _wh_seq(int eq, char *str0, char *str1)
 int
 _wh_fdcmp(int fd0, int fd1)
 {
-	ssize_t sum=0;		/* Sum of read bytes */
 	ssize_t siz0, siz1;	/* Size of read buffer */
 	char buf0[BUFSIZ];	/* Buffer for reading from fd0 */
 	char buf1[BUFSIZ];	/* Buffer for reading from fd1 */
@@ -331,7 +336,6 @@ _wh_fdcmp(int fd0, int fd1)
 		if (!_wh_eq(1, buf0, buf1, siz0, siz1)) {
 			return 1;
 		}
-		sum += siz0;
 	}
 	/* At this point BUF0 was read in it's entirely but BUF1 might
 	 * still hold more data.  If difference was not found at this
@@ -453,19 +457,19 @@ _wh_srun(char *cmd, char *sin, char *sout, char *serr, int code)
 	if (sin) {
 		if (!(fp=fopen(WH_IN, "w"))) err(1, "fopen(sin)");
 		if (fputs(sin, fp) == EOF)   err(1, "fputs(sin)");
-		if (fclose(fp))              err(1, "fopen(sin)");
+		if (fclose(fp))              err(1, "fclose(sin)");
 		sin = WH_IN;
 	}
 	if (sout) {
 		if (!(fp=fopen(WH_OUT, "w"))) err(1, "fopen(sout)");
 		if (fputs(sout, fp) == EOF)   err(1, "fputs(sout)");
-		if (fclose(fp))               err(1, "fopen(sout)");
+		if (fclose(fp))               err(1, "fclose(sout)");
 		sout = WH_OUT;
 	}
 	if (serr) {
 		if (!(fp=fopen(WH_ERR, "w"))) err(1, "fopen(serr)");
 		if (fputs(serr, fp) == EOF)   err(1, "fputs(serr)");
-		if (fclose(fp))               err(1, "fopen(serr)");
+		if (fclose(fp))               err(1, "fclose(serr)");
 		serr = WH_ERR;
 	}
 	return _wh_run(cmd, sin, sout, serr, code);
