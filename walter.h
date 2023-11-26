@@ -1,9 +1,17 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications by avoiding boilerplate.
  *
- * walter.h v3.1 from https://github.com/ir33k/walter by irek@gabr.pl
+ * walter.h v3.2 from https://github.com/ir33k/walter by irek@gabr.pl
  *
- * Example usage:
+ * Table of contents:
+ *
+ *	Example test file
+ *	Compile and run
+ *	Disclaimers
+ *	Change log
+ *	Licenses (at the very end of this file)
+ *
+ * Example test file:
  *
  *	// File: demo.t.c
  *	#define WH_MAX 1024             // Optional, number of tests
@@ -52,17 +60,51 @@
  *	$ ./dmeo.t -h             # Print usage help
  *	$ ./dmeo.t                # Run tests
  *
- * Can be included only in one test program because it has single
- * global tests state, it defines it's own "main" function and TEST
- * macro relays on file line numbers.
+ * Disclaimers:
  *
- * By default you can define only 64 tests but this can be changed by
- * predefining WH_MAX (see example).  Variables, functions and macros
- * not mentioned in example test program should not be used.
+ *	Library can be included only in one test program because it
+ *	has single global tests state, it defines it's own "main"
+ *	function and TEST macro relays on file line numbers.
  *
- * WH_ prefix stands for Walter.H.  _WH_ is used for private stuff.
- * __WH_ is for super epic internal private stuff, just move along,
- * this is not the code you are looking for  \(-_- )
+ *	By default you can define only 64 tests but this can be
+ *	changed by predefining WH_MAX (see example).  Variables,
+ *	functions and macros not mentioned in example test program
+ *	should not be used.
+ *
+ *	WH_ prefix stands for Walter.H.  _WH_ is used for private
+ *	stuff.  __WH_ is for super epic internal private stuff, just
+ *	move along, this is not the code you are looking for \(-_- )
+ *
+ * Change Log:
+ *
+ *	2023.11.26	v3.2
+ *
+ *	1. Fix "missing sentinel in function call" warning in execl().
+ *	   Looks like when compiled using gcc with new C standard the
+ *	   warning is printed because last value to excel() has to be
+ *	   a null terminator.  It was as I was using value of 0.  For
+ *	   compiler to not complain it has to be casted to (char*).
+ *	   This is what NULL macro does so I just changed 0 to NULL.
+ *	2. Extend documentation with table of contents and change log.
+ *	   Recently I feel like relaying on version control with such
+ *	   information like changelog taken from commit messages might
+ *	   not be a good idea for a project like this as we expect to
+ *	   copy and paste single file to other projects.  Then copy it
+ *	   from one project to another.  Connection to original repo
+ *	   might get lost very quickly even tho link to it is provided
+ *	   at the very top.  I recently copiec similar single header
+ *	   libs from other repositories and I have no idea where those
+ *	   come from.  So I will try to maintain changelog here.
+ *
+ *	2023.10.31	v3.1
+ *	
+ *	1. Cast arguments to strings in string macros.
+ *	2. Calculate _wh_eq offset in more readable way.
+ *	3. Wrap strings in quotes in _wh_eq error message.
+ *	4. Leave a TODO comment about arrow _wh_eq in error message.
+ *	5. Remove unused sum variable.
+ *	6. Fix typo in error messages of _wh_srun.
+ *	
  */
 #ifdef _WALTER_H
 #error "walter.h can't be included multiple times (read doc)"
@@ -381,7 +423,7 @@ _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 		dup(fd_in[0]);
 		dup(fd_out[1]);
 		dup(fd_err[1]);
-		if (execl("/bin/sh", "sh", "-c", cmd, 0) == -1) {
+		if (execl("/bin/sh", "sh", "-c", cmd, NULL) == -1) {
 			perror("execl");
 			return 0;
 		}
@@ -474,7 +516,7 @@ _wh_srun(char *cmd, char *sin, char *sout, char *serr, int code)
 	}
 	return _wh_run(cmd, sin, sout, serr, code);
 }
-/*
+/* Licenses:
 This software is available under 2 licenses, choose whichever.
 ----------------------------------------------------------------------
 ALTERNATIVE A - MIT License, Copyright (c) 2023 Irek
