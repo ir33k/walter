@@ -1,7 +1,7 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications by avoiding boilerplate.
  *
- * walter.h v3.2 from https://github.com/ir33k/walter by irek@gabr.pl
+ * walter.h v3.3 from https://github.com/ir33k/walter by irek@gabr.pl
  *
  * Table of contents:
  *
@@ -77,6 +77,11 @@
  *
  * Change Log:
  *
+ *	2023.11.27	v3.3
+ *
+ *	1. Add missing void to test function args in type declaration.
+ *	2. Cleanup whitespaces.
+ *
  *	2023.11.26	v3.2
  *
  *	1. Fix "missing sentinel in function call" warning in execl().
@@ -97,14 +102,14 @@
  *	   come from.  So I will try to maintain changelog here.
  *
  *	2023.10.31	v3.1
- *	
+ *
  *	1. Cast arguments to strings in string macros.
  *	2. Calculate _wh_eq offset in more readable way.
  *	3. Wrap strings in quotes in _wh_eq error message.
  *	4. Leave a TODO comment about arrow _wh_eq in error message.
  *	5. Remove unused sum variable.
  *	6. Fix typo in error messages of _wh_srun.
- *	
+ *
  */
 #ifdef _WALTER_H
 #error "walter.h can't be included multiple times (read doc)"
@@ -120,18 +125,18 @@
 #include <unistd.h>
 #include <err.h>
 
-#ifndef WH_MAX			/* Maximum number of TEST/SKIP/ONLY */
-#define WH_MAX  64		/* test macros that can be handled. */
-#endif				/* Predefine to handle more tests.  */
+#ifndef WH_MAX                  /* Maximum number of TEST/SKIP/ONLY */
+#define WH_MAX  64              /* test macros that can be handled. */
+#endif                          /* Predefine to handle more tests.  */
 
-#ifndef WH_SHOW			/* How many characters/bytes print  */
-#define WH_SHOW 32		/* when file comperation fail, RUN. */
-#endif				/* Predefine for different amount.  */
+#ifndef WH_SHOW                 /* How many characters/bytes print  */
+#define WH_SHOW 32              /* when file comperation fail, RUN. */
+#endif                          /* Predefine for different amount.  */
 
-#define WH_NUL	"<NULL>"	/* How to represent NULL value */
-#define WH_IN	"/tmp/__wh.in"	/* Temporary file for stdin mock */
-#define WH_OUT	"/tmp/__wh.out"	/* Temporary file for stdout mock */
-#define WH_ERR	"/tmp/__wh.err"	/* Temporary file for stderr mock */
+#define WH_NUL  "<NULL>"        /* How to represent NULL value */
+#define WH_IN   "/tmp/__wh.in"  /* Temporary file for stdin mock */
+#define WH_OUT  "/tmp/__wh.out" /* Temporary file for stdout mock */
+#define WH_ERR  "/tmp/__wh.err" /* Temporary file for stderr mock */
 
 #define __WH_CORE(_msg, _id, _line, _type)                           \
 	void __wh_test_body##_id(void);                              \
@@ -212,7 +217,7 @@ struct {                        /* Tests global state */
 	int    line[WH_MAX];    /* TEST macros line in file */
 	int    type[WH_MAX];    /* Test type enum WH_SKIP... */
 	char  *msg[WH_MAX];     /* TEST macro messages */
-	void (*fn[WH_MAX])();	/* Test functions pointers */
+	void (*fn[WH_MAX])(void); /* Test functions pointers */
 } _wh = {0};
 
 /* String representations of test macro types. */
@@ -357,9 +362,9 @@ _wh_seq(int eq, char *str0, char *str1)
 int
 _wh_fdcmp(int fd0, int fd1)
 {
-	ssize_t siz0, siz1;	/* Size of read buffer */
-	char buf0[BUFSIZ];	/* Buffer for reading from fd0 */
-	char buf1[BUFSIZ];	/* Buffer for reading from fd1 */
+	ssize_t siz0, siz1;     /* Size of read buffer */
+	char buf0[BUFSIZ];      /* Buffer for reading from fd0 */
+	char buf1[BUFSIZ];      /* Buffer for reading from fd1 */
 	while ((siz0 = read(fd0, buf0, BUFSIZ)) > 0) {
 		/* We should be able to read the same amount of bytes
 		 * SIZ0 from FD1 as we read from FD0.  So we should at
@@ -399,21 +404,21 @@ _wh_fdcmp(int fd0, int fd1)
 int
 _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 {
-	int fd;			/* sin, sout, serr file desciptor */
-	int fd_in[2];		/* File desciptors for input pipe */
-	int fd_out[2];		/* File desciptors for output pipe */
-	int fd_err[2];		/* File desciptors for error pipe */
-	int ws, wes;		/* Wait status, wait exit status */
-	pid_t pid;		/* CMD process id */
-	char buf[BUFSIZ];	/* For passing stdin to PID SIN pipe */
-	ssize_t ssiz;		/* Signed size, to read bytes */
+	int fd;                 /* sin, sout, serr file desciptor */
+	int fd_in[2];           /* File desciptors for input pipe */
+	int fd_out[2];          /* File desciptors for output pipe */
+	int fd_err[2];          /* File desciptors for error pipe */
+	int ws, wes;            /* Wait status, wait exit status */
+	pid_t pid;              /* CMD process id */
+	char buf[BUFSIZ];       /* For passing stdin to PID SIN pipe */
+	ssize_t ssiz;           /* Signed size, to read bytes */
 	/* Open pipes.  We need pipe for stdin, stdout and asderr. */
 	if (pipe(fd_in)  == -1) err(1, "pipe(fd_in)");
 	if (pipe(fd_out) == -1) err(1, "pipe(fd_out)");
 	if (pipe(fd_err) == -1) err(1, "pipe(fd_err)");
 	/* Fork process to run CMD as a child. */
 	if ((pid = fork()) == -1) err(1, "fork");
-	if (pid == 0) {		  /* Child process, the CMD */
+	if (pid == 0) {           /* Child process, the CMD */
 		close(fd_in[1]);  /* Index 1 is for writing. */
 		close(fd_out[0]); /* Index 0 is for reading */
 		close(fd_err[0]);
@@ -487,9 +492,9 @@ _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 	if (WIFEXITED(ws) && (wes = WEXITSTATUS(ws)) != code) {
 		fprintf(stderr, "\tExpected exit code %d, got %d\n",
 			code, wes);
-		return 0;	/* Failed */
+		return 0;       /* Failed */
 	}
-	return 1;		/* Success */
+	return 1;               /* Success */
 }
 
 int
