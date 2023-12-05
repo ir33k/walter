@@ -1,7 +1,7 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications by avoiding boilerplate.
  *
- * walter.h v3.3 from https://github.com/ir33k/walter by irek@gabr.pl
+ * walter.h v4.0 from https://github.com/ir33k/walter by irek@gabr.pl
  *
  * Table of contents:
  *
@@ -40,11 +40,10 @@
  *		RUN("ls -lh",     NULL,    "out.txt",  NULL,     0);
  *		RUN("pwd",        0,        0,         0,        0);
  *
- *		// Same as RUN macro but provide string directly
- *		// instead of paths to files with expected stdin,
- *		// stdout and stderr.  All 3 values can be omitted
- *		// with NULL.
- *		SRUN("tr abc 123", "AaBbCc", "A1B2C3", 0, 0);
+ *		// If you want to use string literal instead of file
+ *		// path then use S2F() macro as argument that creates
+ *		// temporary file with provided string.
+ *		RUN("tr abc 123", S2F("AaBbCc"), S2F("A1B2C3"), 0, 0);
  *	}
  *	TEST("Another test 1") { ... }  // Define as many as WH_MAX
  *	SKIP("Another test 2") { ... }  // Skip or just ignore test
@@ -76,6 +75,13 @@
  *	move along, this is not the code you are looking for \(-_- )
  *
  * Change Log:
+ *
+ *	2023.12.04	v4.0
+ *
+ *	1. Major version update because of breaking changes in SRUN().
+ *	2. Remove SRUN() in favor of RUN() used with S2F().
+ *	3. Implement S2F() macro and adjust documentation accordingly.
+ *	4. Fix failing tests for demo files.
  *
  *	2023.11.27	v3.3
  *
@@ -116,14 +122,16 @@
 #endif
 #define _WALTER_H
 
+#include <assert.h>
+#include <err.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
-#include <err.h>
 
 #ifndef WH_MAX                  /* Maximum number of TEST/SKIP/ONLY */
 #define WH_MAX  64              /* test macros that can be handled. */
@@ -132,11 +140,6 @@
 #ifndef WH_SHOW                 /* How many characters/bytes print  */
 #define WH_SHOW 32              /* when file comperation fail, RUN. */
 #endif                          /* Predefine for different amount.  */
-
-#define WH_NUL  "<NULL>"        /* How to represent NULL value */
-#define WH_IN   "/tmp/__wh.in"  /* Temporary file for stdin mock */
-#define WH_OUT  "/tmp/__wh.out" /* Temporary file for stdout mock */
-#define WH_ERR  "/tmp/__wh.err" /* Temporary file for stderr mock */
 
 #define __WH_CORE(_msg, _id, _line, _type)                           \
 	void __wh_test_body##_id(void);                              \
@@ -188,9 +191,7 @@
 #define RUN(cmd, in, out, err, code)                            \
 	ASSERT(_wh_run(cmd, in, out, err, code),                \
 	       "RUN("#cmd", "#in", "#out", "#err", "#code")")
-#define SRUN(cmd, in, out, err, code)                           \
-	ASSERT(_wh_srun(cmd, in, out, err, code),               \
-	       "SRUN("#cmd", "#in", "#out", "#err", "#code")")
+#define S2F(str) _wh_s2f(str)
 
 /* Force end of test block. */
 #define END() do {return;} while(0)
@@ -246,9 +247,17 @@ int _wh_fdcmp(int fd0, int fd1);
  * CMD exit code.  Return 0 on failure. */
 int _wh_run(char *cmd, char *in, char *out, char *err, int code);
 
-/* Works the same as _wh_run but IN, OUT and ERR are not paths to
- * files but strings. */
-int _wh_srun(char *cmd, char *in, char *out, char *err, int code);
+/* Return random static string of LEN length. */
+char *_wh_rand(int len);
+
+/* Creates tmp file the mkstemp way.  Path to temporary file will be
+ * created in NAME buffer as NULL terminated string.  On success file
+ * desciptor is returned, terminate program on error. */
+int _wh_tmpf(char *name);
+
+/* String To File.  Create temporary file with content of STR string.
+ * Return path to that file. */
+char *_wh_s2f(char *str);
 
 /* Runs tests defined with TEST, SKIP and ONLY macros.
  * Return number of failed tests or 0 on success. */
@@ -346,8 +355,8 @@ _wh_eq(int eq, char *buf0, char *buf1, size_t siz0, size_t siz1)
 		 * confusions I should just have information about
 		 * byte index? */
 		(int)(i-offset)+1, "v", i,
-		(int)(WH_SHOW < siz0 ? WH_SHOW : siz0), buf0 ? buf0 : WH_NUL,
-		(int)(WH_SHOW < siz1 ? WH_SHOW : siz1), buf1 ? buf1 : WH_NUL);
+		(int)(WH_SHOW < siz0 ? WH_SHOW : siz0), buf0 ? buf0 : "<NULL>",
+		(int)(WH_SHOW < siz1 ? WH_SHOW : siz1), buf1 ? buf1 : "<NULL>");
 	return 0;
 }
 
@@ -497,29 +506,51 @@ _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 	return 1;               /* Success */
 }
 
-int
-_wh_srun(char *cmd, char *sin, char *sout, char *serr, int code)
+char *
+_wh_rand(int len)
 {
-	FILE *fp;
-	if (sin) {
-		if (!(fp=fopen(WH_IN, "w"))) err(1, "fopen(sin)");
-		if (fputs(sin, fp) == EOF)   err(1, "fputs(sin)");
-		if (fclose(fp))              err(1, "fclose(sin)");
-		sin = WH_IN;
+	static int seed = 0;
+	static const char *allow =
+		"ABCDEFGHIJKLMNOPRSTUWXYZ"
+		"abcdefghijklmnoprstuwxyz"
+		"0123456789";
+	size_t limit = strlen(allow);
+	static char str[32];
+	assert(len < 32);
+	srand(time(0) + seed++);
+	str[len] = 0;
+	while (len--) {
+		str[len] = allow[rand() % limit];
 	}
-	if (sout) {
-		if (!(fp=fopen(WH_OUT, "w"))) err(1, "fopen(sout)");
-		if (fputs(sout, fp) == EOF)   err(1, "fputs(sout)");
-		if (fclose(fp))               err(1, "fclose(sout)");
-		sout = WH_OUT;
+	return str;
+}
+
+int
+_wh_tmpf(char *name)
+{
+	static const char *prefix = "/tmp/walter";
+	int fd;
+	do {
+		sprintf(name, "%s%s", prefix, _wh_rand(6));
+	} while (!access(name, F_OK));
+	if ((fd = open(name, O_RDWR | O_CREAT | O_EXCL)) == -1) {
+		err(1, "open(%s)", name);
 	}
-	if (serr) {
-		if (!(fp=fopen(WH_ERR, "w"))) err(1, "fopen(serr)");
-		if (fputs(serr, fp) == EOF)   err(1, "fputs(serr)");
-		if (fclose(fp))               err(1, "fclose(serr)");
-		serr = WH_ERR;
+	return fd;
+}
+
+char *
+_wh_s2f(char *str)
+{
+	char *name = malloc(FILENAME_MAX);
+	int fd = _wh_tmpf(name);
+	if (write(fd, str, strlen(str)) == -1) {
+		err(1, "write(%s)", name);
 	}
-	return _wh_run(cmd, sin, sout, serr, code);
+	if (close(fd) == -1) {
+		err(1, "close(%s)", name);
+	}
+	return name;
 }
 /* Licenses:
 This software is available under 2 licenses, choose whichever.
