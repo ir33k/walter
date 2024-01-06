@@ -354,6 +354,8 @@ _wh_eq(int eq, char *buf0, char *buf1, size_t siz0, size_t siz1)
 		 * to know where to put this arrow.  So maybe to avoid
 		 * confusions I should just have information about
 		 * byte index? */
+		/* TODO(irek): Try this %n format specifier
+		 * https://jorengarenar.github.io/blog/less-known-c#n-format-specifier*/
 		(int)(i-offset)+1, "v", i,
 		(int)(WH_SHOW < siz0 ? WH_SHOW : siz0), buf0 ? buf0 : "<NULL>",
 		(int)(WH_SHOW < siz1 ? WH_SHOW : siz1), buf1 ? buf1 : "<NULL>");
