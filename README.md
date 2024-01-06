@@ -28,3 +28,6 @@ error when running commands but I can't do that with functions.  Now
 I'm in need of such capability.  This has to be thought through and at
 the moment I don't have any clear vision.  It might be difficult I'll
 come back later.
+
+I also want to provide an flag to enable printing of absolute paths to
+test file with failed assertion instead of relative path as it is now.
