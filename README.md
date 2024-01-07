@@ -31,3 +31,11 @@ come back later.
 
 I also want to provide an flag to enable printing of absolute paths to
 test file with failed assertion instead of relative path as it is now.
+
+One more thing.  The basic assertion macros where fine for all my use
+cases so far but having just the OK() macro for testing numbers is not
+convenient when the assertion fails.  This is because unlike in string
+assertions, OK() macro will not print what was the actual value when
+it was not what we expected.  There is a way to do generics in C and
+by that I could handle all the different numbers with single macro but
+I would like to avoid generics.
