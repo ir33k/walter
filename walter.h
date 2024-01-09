@@ -234,16 +234,16 @@ int _wh_eq(int eq, char *buf0, char *buf1, size_t siz0, size_t size1);
  * different. */
 int _wh_seq(int eq, char *str0, char *str1);
 
-/* Compare files pointed by FD0 and FD1 file desciptors.  Print error
- * message showing where the differance is if content is not the
+/* Compare files pointed by FD0 and FD1 file descriptors.  Print error
+ * message showing where the difference is if content is not the
  * same.  Return 0 when files are the same. */
 int _wh_fdcmp(int fd0, int fd1);
 
 /* Test CMD.  IN, OUT and ERR are optional paths to files used as
- * stdin, stdou and stderr, can be ommited by setting them to NULL.
+ * stdin, stdou and stderr, can be omitted by setting them to NULL.
  * Function will run CMD command with IN file content if given and
  * test if stdout is equal to content of OUT file if given, same for
- * ERR and will compare CODE expected program exit code with actuall
+ * ERR and will compare CODE expected program exit code with actually
  * CMD exit code.  Return 0 on failure. */
 int _wh_run(char *cmd, char *in, char *out, char *err, int code);
 
@@ -252,7 +252,7 @@ char *_wh_rand(int len);
 
 /* Creates tmp file the mkstemp way.  Path to temporary file will be
  * created in NAME buffer as NULL terminated string.  On success file
- * desciptor is returned, terminate program on error. */
+ * descriptor is returned, terminate program on error. */
 int _wh_tmpf(char *name);
 
 /* String To File.  Create temporary file with content of STR string.
@@ -315,7 +315,7 @@ main(int argc, char **argv)
 			break;
 		}
 	}
-	/* Print verbose summary or errors if occured. */
+	/* Print verbose summary or errors if occurred. */
 	if (_wh.flag & _WH_V) {
 		fprintf(stdout, "FILE %s\t(%d/%d) pass\n", _wh.fname,
 			_wh.all - _wh.err, _wh.all);
@@ -379,7 +379,7 @@ _wh_fdcmp(int fd0, int fd1)
 	while ((siz0 = read(fd0, buf0, BUFSIZ)) > 0) {
 		/* We should be able to read the same amount of bytes
 		 * SIZ0 from FD1 as we read from FD0.  So we should at
-		 * leas be able to read from FD1 and SIZ0 and SIZ1
+		 * least be able to read from FD1 and SIZ0 and SIZ1
 		 * should be the same. */
 		if ((siz1 = read(fd1, buf1, siz0)) == -1) {
 			if (!_wh_eq(1, buf0, 0, siz0, 0)) {
@@ -415,10 +415,10 @@ _wh_fdcmp(int fd0, int fd1)
 int
 _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 {
-	int fd;                 /* sin, sout, serr file desciptor */
-	int fd_in[2];           /* File desciptors for input pipe */
-	int fd_out[2];          /* File desciptors for output pipe */
-	int fd_err[2];          /* File desciptors for error pipe */
+	int fd;                 /* sin, sout, serr file descriptor */
+	int fd_in[2];           /* File descriptors for input pipe */
+	int fd_out[2];          /* File descriptors for output pipe */
+	int fd_err[2];          /* File descriptors for error pipe */
 	int ws, wes;            /* Wait status, wait exit status */
 	pid_t pid;              /* CMD process id */
 	char buf[BUFSIZ];       /* For passing stdin to PID SIN pipe */
@@ -450,7 +450,7 @@ _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 	close(fd_in[0]);
 	close(fd_out[1]);
 	close(fd_err[1]);
-	/* Pass standard intput. */
+	/* Pass standard input. */
 	if (sin) {
 		if ((fd = open(sin, O_RDONLY)) == -1) {
 			err(1, "open(%s)", sin);
