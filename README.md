@@ -29,10 +29,7 @@ I'm in need of such capability.  This has to be thought through and at
 the moment I don't have any clear vision.  It might be difficult I'll
 come back later.
 
-I also want to provide an flag to enable printing of absolute paths to
-test file with failed assertion instead of relative path as it is now.
-
-One more thing.  The basic assertion macros where fine for all my use
+Another thing.  The basic assertion macros where fine for all my use
 cases so far but having just the OK() macro for testing numbers is not
 convenient when the assertion fails.  This is because unlike in string
 assertions, OK() macro will not print what was the actual value when
