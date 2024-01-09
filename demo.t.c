@@ -9,6 +9,9 @@ TEST("demo0")
 	RUN(SRC"demo0.t -v", 0, "snap/demo0.2out", "snap/demo0.2err", 3);
 	RUN(SRC"demo0.t -q", 0, "snap/empty",      "snap/demo0.3err", 3);
 	RUN(SRC"demo0.t -f", 0, "snap/empty",      "snap/demo0.4err", 1);
+	/* I can't check absolute path feature as it will produce
+	 * different results on different machines.  Shame (-_- )*/
+	/* RUN(SRC"demo0.t -a", 0, 0, 0, 0); */
 }
 
 TEST("demo1")

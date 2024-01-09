@@ -1,14 +1,14 @@
 /* Walter is a single header library for writing unit tests in C made
  * with fewer complications by avoiding boilerplate.
  *
- * walter.h v4.0 from https://github.com/ir33k/walter by irek@gabr.pl
+ * walter.h v4.1 from https://github.com/ir33k/walter by irek@gabr.pl
  *
  * Table of contents:
  *
  *	Example test file
  *	Compile and run
  *	Disclaimers
- *	Change log
+ *	Change log with contributors
  *	Licenses (at the very end of this file)
  *
  * Example test file:
@@ -74,7 +74,16 @@
  *	stuff.  __WH_ is for super epic internal private stuff, just
  *	move along, this is not the code you are looking for \(-_- )
  *
- * Change Log:
+ * Change log with contributors:
+ *
+ *	2024.01.09	v4.1
+ *
+ *	1. Fix typos in comments by Kian-Meng Ang <kianmeng@cpan.org>.
+ *	2. Add -a flag for printing absolute file paths.
+ *	3. Remove arrow when printing error message for strings and
+ *	   buffers assertions.  It was often pointing at wrong byte.
+ *	   This was because string or buffer could contain characters
+ *	   like tabs, returns, multi-byte or non printable characters.
  *
  *	2023.12.04	v4.0
  *
@@ -174,8 +183,8 @@
 		_wh.last_all++;                                      \
 		if ((_bool)) break;             /* Pass */           \
 		_wh.last_err++;                 /* Fail */           \
-		fprintf(stderr, "%s:%d:\t%s\n",                      \
-			_wh.fname, _line, _msg);                     \
+		fprintf(stderr, "%s%s:%d:\t%s\n",                    \
+			_wh.cwd, _wh.fname, _line, _msg);            \
 		if (_wh.flag & _WH_Q) return;   /* End quick */      \
 	} while(0)
 #define ASSERT(a,msg) _WH_ASSERT(a, msg, __LINE__)
@@ -209,6 +218,7 @@ enum {                          /* Test macro types */
 	__WH_SIZ                /* For _wh_type array size */
 };
 struct {                        /* Tests global state */
+	char   cwd[4096];       /* Current working directory */
 	char  *fname;           /* Test source file name */
 	int    flag;            /* Program flags, enum _WH_V... */
 	int    all;             /* Number of all tests */
@@ -235,8 +245,8 @@ int _wh_eq(int eq, char *buf0, char *buf1, size_t siz0, size_t size1);
 int _wh_seq(int eq, char *str0, char *str1);
 
 /* Compare files pointed by FD0 and FD1 file descriptors.  Print error
- * message showing where the difference is if content is not the
- * same.  Return 0 when files are the same. */
+ * message showing where the difference is if content is not the same.
+ * Return 0 when files are the same. */
 int _wh_fdcmp(int fd0, int fd1);
 
 /* Test CMD.  IN, OUT and ERR are optional paths to files used as
@@ -265,11 +275,17 @@ int
 main(int argc, char **argv)
 {
 	int i;
-	while ((i = getopt(argc, argv, "vqfh")) != -1) {
+	while ((i = getopt(argc, argv, "vqfah")) != -1) {
 		switch (i) {
 		case 'v': _wh.flag |= _WH_V; break;
 		case 'q': _wh.flag |= _WH_Q; break;
 		case 'f': _wh.flag |= _WH_F; break;
+		case 'a':
+			if (!getcwd(_wh.cwd, sizeof(_wh.cwd)-1)) {
+				err(1, "getcwd");
+			}
+			strcat(_wh.cwd, "/");
+			break;
 		case 'h':
 		default:
 			fprintf(stderr, "usage: %s [-vqh]\n\n"
@@ -278,6 +294,7 @@ main(int argc, char **argv)
 				" failed assertion.\n"
 				"\t-f\tFast, exit program on first"
 				" failed test.\n"
+				"\t-a\tPrint absolute file paths.\n"
 				"\t-h\tPrints this help message.\n",
 				argv[0]);
 			return 1;
@@ -289,8 +306,11 @@ main(int argc, char **argv)
 			continue;
 		}
 		if (_wh.type[i] == _WH_SKIP) {
-			fprintf(stderr, "%s:%d:\tSKIP %s\n",
-				_wh.fname, _wh.line[i], _wh.msg[i]);
+			fprintf(stderr, "%s%s:%d:\tSKIP %s\n",
+				_wh.cwd,
+				_wh.fname,
+				_wh.line[i],
+				_wh.msg[i]);
 			continue;
 		}
 		_wh.last_all = 0;
@@ -298,7 +318,8 @@ main(int argc, char **argv)
 		(*_wh.fn[i])();	/* Run test, print assert fails */
 		if (_wh.last_err) {
 			_wh.err++;
-			fprintf(stderr, "%s:%d:\t%s %s\n",
+			fprintf(stderr, "%s%s:%d:\t%s %s\n",
+				_wh.cwd,
 				_wh.fname,
 				_wh.line[i],
 				_wh_type[_wh.type[i]],
@@ -317,10 +338,11 @@ main(int argc, char **argv)
 	}
 	/* Print verbose summary or errors if occurred. */
 	if (_wh.flag & _WH_V) {
-		fprintf(stdout, "FILE %s\t(%d/%d) pass\n", _wh.fname,
-			_wh.all - _wh.err, _wh.all);
+		fprintf(stdout, "FILE %s%s\t(%d/%d) pass\n",
+			_wh.cwd, _wh.fname, _wh.all - _wh.err, _wh.all);
 	} else if (_wh.err) {
-		fprintf(stderr, "%s\t%d err\n", _wh.fname, _wh.err);
+		fprintf(stderr, "%s%s\t%d err\n",
+			_wh.cwd, _wh.fname, _wh.err);
 	}
 	return _wh.err;
 }
@@ -345,18 +367,10 @@ _wh_eq(int eq, char *buf0, char *buf1, size_t siz0, size_t siz1)
 	buf1 += offset;
 	siz1 -= offset;
 	fprintf(stderr,
-		"\t %*s byte %lu\n"
+		"\t First incorrect byte: %lu\n"
 		"\t\"%.*s\"\n"
 		"\t\"%.*s\"\n",
-		/* TODO(irek): This arrow to invalid character is not
-		 * very precise.  It's because if there will be white
-		 * character like \r or \t then it's impossible for me
-		 * to know where to put this arrow.  So maybe to avoid
-		 * confusions I should just have information about
-		 * byte index? */
-		/* TODO(irek): Try this %n format specifier
-		 * https://jorengarenar.github.io/blog/less-known-c#n-format-specifier*/
-		(int)(i-offset)+1, "v", i,
+		i,
 		(int)(WH_SHOW < siz0 ? WH_SHOW : siz0), buf0 ? buf0 : "<NULL>",
 		(int)(WH_SHOW < siz1 ? WH_SHOW : siz1), buf1 ? buf1 : "<NULL>");
 	return 0;

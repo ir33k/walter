@@ -3,4 +3,5 @@ usage: ./demo/demo0.t [-vqh]
 	-v	Print verbose output.
 	-q	Quick, stop test on first failed assertion.
 	-f	Fast, exit program on first failed test.
+	-a	Print absolute file paths.
 	-h	Prints this help message.
