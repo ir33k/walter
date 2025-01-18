@@ -1,4 +1,4 @@
-/** All tests should pass. */
+/* All tests should pass. */
 
 #include <string.h>
 #include "../walter.h"
@@ -80,6 +80,6 @@ TEST("flow")
 	OK(1);
 	OK(1);
 
-	END();
+	return;
 	ASSERT(0, "Unreachable fail message");
 }

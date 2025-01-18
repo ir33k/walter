@@ -1,20 +1,18 @@
-/**
- * Custom test functions and macros.
- *
- * To create custom assertion macro use ASSERT macro as a base.
- *
- *	ASSERT(BOOL, MSG)
- *
- * BOOL can be anything results in true/false value, that is 0 value
- * as false and non 0 value as true.  MSG is a string printed when
- * BOOL value is 0.
- */
+/* Custom test functions and macros.
+
+To create custom assertion macro use ASSERT macro as a base.
+
+	ASSERT(BOOL, MSG)
+
+BOOL can be anything results in true/false value, that is 0 value
+as false and non 0 value as true.  MSG is a string printed when
+BOOL value is 0.
+*/
 
 #include <string.h>
 #include "../walter.h"
 
-/**
- * Example 1
+/* Example 1
  * ===================================================================
  * 
  * Simple assertions that can be written inline.  To stay true to
@@ -32,8 +30,7 @@ TEST("Custom CLAMP macro")
 	CLAMP(-1, 2, 1);	/* Fail */
 }
 
-/**
- * Example 2
+/* Example 2
  * ===================================================================
  * 
  * Pass assertion when in array of ints ARR of size SIZ int X can be
@@ -68,8 +65,7 @@ TEST("Custom HAS_INT macro")
 	HAS_INT(arr, 5, 5);	/* Fail */
 }
 
-/**
- * Example 3
+/* Example 3
  * ===================================================================
  * 
  * You might want to print more details when assertion fails.  This

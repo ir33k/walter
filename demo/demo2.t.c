@@ -1,4 +1,4 @@
-/** All tests should fail. */
+/* All tests should fail. */
 
 #include <string.h>
 #include "../walter.h"
@@ -82,7 +82,7 @@ TEST("buffers")
 TEST("flow")
 {
 	ASSERT(0, "Custom fail message");
-	END();
+	return;
 
 	OK(1);			/* Unreachable */
 	OK(1);

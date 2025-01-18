@@ -96,4 +96,4 @@ demo/demo2.t.c:79:	EQ(buf, "Lorem ipsum", 8)
 demo/demo2.t.c:64:	TEST buffers
 demo/demo2.t.c:84:	Custom fail message
 demo/demo2.t.c:82:	TEST flow
-demo/demo2.t.c	5 err
+demo/demo2.t.c	5 fail

@@ -1,6 +1,11 @@
+/* Who guards the guard?
+
+Tests for Walter test lib.  It validates output of demonstration test
+files using walter.h as they do.  What can go wrong (^_^ )
+*/
 #include "walter.h"
 
-#define SRC "./demo/"
+#define SRC "./demo/"	/* Path to demonstratino files */
 
 TEST("demo0")
 {

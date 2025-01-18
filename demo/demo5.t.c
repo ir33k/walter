@@ -1,4 +1,4 @@
-/** Testing standard input, output, error and exit code of command. */
+/* Testing standard input, output, error and exit code of command. */
 
 #include "../walter.h"
 

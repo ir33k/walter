@@ -1,8 +1,4 @@
-/** Simple examples of basic assertions. */
-
-/* Set max number of tests by defining TESTMAX before including
- * walter.h if you need more than 64. */
-#define TESTMAX 128
+/* Simple examples of basic assertions. */
 #include "../walter.h"
 
 TEST("All should pass")		/* Define test with assertions */
@@ -19,7 +15,7 @@ TEST("All should pass")		/* Define test with assertions */
 	SNEQ(str, "Walter");	/* Are strings not equal? */
 	NEQ(buf, "123", 3);	/* Are buffers not equal? */
 
-	END();			/* Force test to end here */
+	return;			/* Force test to end here */
 	ASSERT(0, "Fail");	/* Force fail in this line */
 }
 
@@ -57,7 +53,7 @@ TEST("End test at any moment")
 	OK(1);
 
 	if (1) {
-		END();		/* End here */
+		return;		/* End here */
 	}
 
 	OK(0);			/* Unreachable */
@@ -72,7 +68,7 @@ TEST("Fail and end at the same time")
 
 	if (1) {
 		ASSERT(0, "Fail");
-		END();
+		return;
 	}
 
 	OK(0);			/* Unreachable */

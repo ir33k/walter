@@ -1,9 +1,9 @@
-demo/demo0.t.c:28:	OK(0)
-demo/demo0.t.c:26:	TEST You shall not pass!
-demo/demo0.t.c:46:	Fail
-demo/demo0.t.c:39:	TEST Trigger fail at any moment
-demo/demo0.t.c:74:	Fail
-demo/demo0.t.c:67:	TEST Fail and end at the same time
-demo/demo0.t.c:82:	SKIP Skip or mark any test as TODO
-demo/demo0.t.c:84:	SKIP Not finished or just ignored test
-demo/demo0.t.c	3 err
+demo/demo0.t.c:24:	OK(0)
+demo/demo0.t.c:22:	TEST You shall not pass!
+demo/demo0.t.c:42:	Fail
+demo/demo0.t.c:35:	TEST Trigger fail at any moment
+demo/demo0.t.c:70:	Fail
+demo/demo0.t.c:63:	TEST Fail and end at the same time
+demo/demo0.t.c:78:	SKIP Skip or mark any test as TODO
+demo/demo0.t.c:80:	SKIP Not finished or just ignored test
+demo/demo0.t.c	3 fail
