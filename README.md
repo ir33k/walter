@@ -1,38 +1,53 @@
-walter
+Walter
 ======
 
-Single header library for writing unit tests in C made with fewer
-complications by avoiding boilerplate.  Comparing to other similar
-libraries this focus on minimizing tests setup and prints direct paths
-with line number to failed assertions and tests.
+Single header library for writing unit tests in C with fewer
+complications by avoiding boilerplate.
 
-I would like to say that code is simple but it's mostly macro magic
-and global state.  So better hold your wizards hat while reading.
+	walter.h        Library with full documentation and licence
+	demo/           Demonstration test programs AKA examples
+	snap/           Snapshots for walter.t.c library tests
+	build           Script to build and run tests
 
-Detailed documentation can be found inside library file `walter.h`.
-Examples can be found in `demo/` and `demo.t.c`.
-
-	walter.h        Library, includes licence and documentation
-	build           Script to builds demo test programs and demo.t.c
-	demo/           Demonstration programs
-	snap/           Snapshots of expected output in demo.t.c tests
-
-Should work on POSIX systems.
-Should NOT work on Windows.
+Expected to work on POSIX systems and NOT on Windows.
 
 
-2024.01.06 Sat 20:13	TODO
+Example
+-------
 
-I just realized that I can easily work with standard input, output and
-error when running commands but I can't do that with functions.  Now
-I'm in need of such capability.  This has to be thought through and at
-the moment I don't have any clear vision.  It might be difficult I'll
-come back later.
+```c
+// File: example.t.c
+#include "some_lib.h"           // Include your code
+#include "walter.h"             // Include Walter
 
-Another thing.  The basic assertion macros where fine for all my use
-cases so far but having just the OK() macro for testing numbers is not
-convenient when the assertion fails.  This is because unlike in string
-assertions, OK() macro will not print what was the actual value when
-it was not what we expected.  There is a way to do generics in C and
-by that I could handle all the different numbers with single macro but
-I would like to avoid generics.
+TEST("Test description")        // Define test with assertsions
+{
+	OK(func1());            // Fail when value is 0
+	EQ(func2(), "abc", 3);  // Fail when buffers of size 3 are not equal
+}
+
+// No main() function as it is already defined in walter.h
+```
+
+Compile and run:
+
+```sh
+$ cc -o example.t example.t.c
+$ ./example.t
+	 First incorrect byte: 2
+	"abb"
+	"abc"
+example.t.c:8:	EQ("abb", "abc", 3)
+example.t.c:5:	TEST Test description
+example.t.c	1 err
+```
+
+This is examle of default program output when second assertion failed
+because string produced by `func2()` was different than `"abc"`. at
+third character.  First you get the details about what went wrong,
+then path to failed assertion, then path to fialed test with that
+assertion.  Lastly there is a summery of how many errors where
+produced in that test file.  By default when all tests pass there is
+no output.
+
+Full documentation with better example is in `walter.h`.
