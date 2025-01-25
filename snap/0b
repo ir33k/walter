@@ -1,0 +1,34 @@
+demo/0.t.c:24:	OK(0)
+demo/0.t.c:25:	OK(0.1 + 0.2 == 0.3)
+demo/0.t.c:26:	OK(44 != 44)
+	 First incorrect byte: 8
+	"Lorem ipsum"
+	"Lorem ipusm"
+demo/0.t.c:27:	SEQ("Lorem ipsum", "Lorem ipusm")
+	 First incorrect byte: 11
+	"Lorem ipsumm"
+	"Lorem ipsum"
+demo/0.t.c:28:	SEQ("Lorem ipsumm", "Lorem ipsum")
+	 First incorrect byte: 0
+	"2345"
+	"0045"
+demo/0.t.c:29:	EQ("2345", "0045", 4)
+	 First incorrect byte: 11
+	"Lorem ipsum"
+	"Lorem ipsum"
+demo/0.t.c:30:	SNEQ("Lorem ipsum", "Lorem ipsum")
+	 First incorrect byte: 4
+	"1234"
+	"1234"
+demo/0.t.c:31:	NEQ("1234", "1234", 4)
+demo/0.t.c:32:	Custom fail message
+demo/0.t.c:22:	TEST You shall not pass!
+demo/0.t.c:42:	Fail
+demo/0.t.c:45:	Second fail
+demo/0.t.c:46:	Third fail
+demo/0.t.c:35:	TEST Trigger fail at any moment
+demo/0.t.c:70:	Fail
+demo/0.t.c:63:	TEST Fail and end at the same time
+demo/0.t.c:78:	SKIP Skip or mark any test as TODO
+demo/0.t.c:80:	SKIP Not finished or just ignored test
+demo/0.t.c	3 fail

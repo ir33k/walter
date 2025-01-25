@@ -1,0 +1,17 @@
+demo/2.t.c:11:	OK(!bool_t)
+demo/2.t.c:6:	TEST booleans
+demo/2.t.c:28:	OK(123 != 123)
+demo/2.t.c:23:	TEST numbers
+	 First incorrect byte: 11
+	"Lorem ipsum"
+	"Lorem ipsum"
+demo/2.t.c:49:	SNEQ("Lorem ipsum", "Lorem ipsum")
+demo/2.t.c:45:	TEST strings
+	 First incorrect byte: 10
+	"Lorem ipsu"
+	"Lorem ipsu"
+demo/2.t.c:71:	NEQ("Lorem ipsum", "Lorem ipsum", 10)
+demo/2.t.c:64:	TEST buffers
+demo/2.t.c:84:	Custom fail message
+demo/2.t.c:82:	TEST flow
+demo/2.t.c	5 fail

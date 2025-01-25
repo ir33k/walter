@@ -1,4 +1,0 @@
-TEST Custom CLAMP macro	(3/4) pass
-TEST Custom HAS_INT macro	(3/4) pass
-TEST Custom STARTS_WITH macro	(3/4) pass
-FILE demo/demo3.t.c	(0/3) pass

@@ -91,8 +91,6 @@ SKIP("Not finished or just ignored test") {
  *	$ cc -o demo0.t demo0.t.c   # Compile
  *	$ ./demo0.t -h              # Print usage help
  *	$ ./demo0.t                 # Run tests
- *	$ ./demo0.t -v              # Run in verbose mode
  *	$ ./demo0.t -q              # End quick on first failed assertion
- *	$ ./demo0.t -vq             # Captain obvious
  *	$ ./demo0.t -f              # End entire testing on first failed test
  */

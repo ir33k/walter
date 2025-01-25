@@ -1,0 +1,6 @@
+usage: demo/0.t [options]
+
+options:
+	-q	Quick, stop TEST on first failed assertion.
+	-l N	Limit, stop after N number of failed tests.
+	-h	Prints this help message.

@@ -6,12 +6,12 @@ CFLAGS="-Wall -Wextra -Wshadow -Wmissing-declarations -Wswitch-enum -pedantic -s
 set -ex
 
 # Compile demonstration tests
-$CC $CFLAGS -o demo/demo0.t demo/demo0.t.c
-$CC $CFLAGS -o demo/demo1.t demo/demo1.t.c
-$CC $CFLAGS -o demo/demo2.t demo/demo2.t.c
-$CC $CFLAGS -o demo/demo3.t demo/demo3.t.c
-$CC $CFLAGS -o demo/demo4.t demo/demo4.t.c
-$CC $CFLAGS -o demo/demo5.t demo/demo5.t.c
+$CC $CFLAGS -o demo/0.t demo/0.t.c
+$CC $CFLAGS -o demo/1.t demo/1.t.c
+$CC $CFLAGS -o demo/2.t demo/2.t.c
+$CC $CFLAGS -o demo/3.t demo/3.t.c
+$CC $CFLAGS -o demo/4.t demo/4.t.c
+$CC $CFLAGS -o demo/5.t demo/5.t.c
 
 # Compile walter tests
 $CC $CFLAGS -o tests tests.c

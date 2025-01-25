@@ -1,6 +1,0 @@
-TEST All should pass	(6/6) pass
-TEST You shall not pass!	(0/9) pass
-TEST Trigger fail at any moment	(3/6) pass
-TEST End test at any moment	(3/3) pass
-TEST Fail and end at the same time	(3/4) pass
-FILE demo/demo0.t.c	(4/7) pass

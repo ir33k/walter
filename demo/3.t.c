@@ -84,12 +84,10 @@ __starts_with(char *str, char *x)
 		return 1;
 	}
 	/* Print strings so the difference is clearly visible.
-	 * Failed assertion message should be printed in stderr.
 	 * Using tab as prefix helps separate from next error.*/
-	fprintf(stderr,
-		"\t'%s'\n"
-		"\t'%s'\n",
-		str, x);
+	printf("\t'%s'\n"
+	       "\t'%s'\n",
+	       str, x);
 	return 0;
 }
 

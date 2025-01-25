@@ -1,0 +1,9 @@
+demo/0.t.c:24:	OK(0)
+demo/0.t.c:22:	TEST You shall not pass!
+demo/0.t.c:42:	Fail
+demo/0.t.c:35:	TEST Trigger fail at any moment
+demo/0.t.c:70:	Fail
+demo/0.t.c:63:	TEST Fail and end at the same time
+demo/0.t.c:78:	SKIP Skip or mark any test as TODO
+demo/0.t.c:80:	SKIP Not finished or just ignored test
+demo/0.t.c	3 fail

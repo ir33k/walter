@@ -21,7 +21,7 @@ Example
 #include <string.h>             // Include your code
 #include "walter.h"             // Include Walter
 
-TEST("Test message")            // Define test with assertions
+TEST("Test description")        // Define test with assertions
 {
 	OK(strlen("abc") == 3); // Fail when not true
 	EQ("abb", "abc", 3);    // Fail when buffers of size 3 are not equal
@@ -39,7 +39,7 @@ $ ./example.t
 	"abb"
 	"abc"
 example.t.c:8:	EQ("abb", "abc", 3)
-example.t.c:5:	TEST Test message
+example.t.c:5:	TEST Test description
 example.t.c	1 fail
 ```
 

@@ -1,0 +1,3 @@
+demo/4.t.c:22:	OK(0)
+demo/4.t.c:20:	ONLY This test will fail
+demo/4.t.c	1 fail
