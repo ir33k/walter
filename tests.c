@@ -7,7 +7,7 @@ files using walter.h as they do.  What can go wrong (^_^ )
 
 TEST("Example demonstration tests should produce expected output")
 {
-	RUN("demo/0.t -h", 0, 0, "snap/0a", 1);
+	RUN("demo/0.t -h",   0, "snap/0a",    0, 1);
 	RUN("demo/0.t",      0, "snap/0b",    0, 3);
 	RUN("demo/0.t -q",   0, "snap/0c",    0, 3);
 	RUN("demo/0.t -l 1", 0, "snap/0d",    0, 1);

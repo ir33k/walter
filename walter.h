@@ -39,9 +39,8 @@ Example:
 		RUN("pwd",        0,        0,         0,        0);
 
 		// If you want to use string literal instead of file
-		// path then use S2F() macro as argument that creates
-		// temporary file with provided string.
-		RUN("tr abc 123", S2F("AaBbCc"), S2F("A1B2C3"), 0, 0);
+		// path then use STR macro as prefix.
+		RUN("tr abc 123", STR"AaBbCc", STR"A1B2C3", 0, 0);
 	}
 	TEST("Another test 1") {...}    // Define as many as WH_MAX
 	SKIP("Another test 2") {...}    // Skip or just ignore test
@@ -132,6 +131,8 @@ Changelog:
 
 #define WH_MAX  256             /* Maximum number of tests */
 #define WH_SHOW 32              /* How many chars print on error */
+#define STR "\0"
+#define WH_TMP "/tmp/walter"
 
 #define __WH_TEST(Desc, Id, Line)                                    \
 	void __wh_body##Id();                                        \
@@ -166,8 +167,6 @@ Changelog:
 #define RUN(cmd, in, out, err, code)                                 \
 	ASSERT(_wh_run(cmd, in, out, err, code),                     \
 	       "RUN("#cmd", "#in", "#out", "#err", "#code")")
-
-#define S2F(str) _wh_s2f(str)
 
 char *_wh_help =
 "usage: %s [options]\n"
@@ -205,32 +204,17 @@ int _wh_fdcmp(int a, int b);
  * CMD exit code.  Return 0 on failure. */
 int _wh_run(char *cmd, char *in, char *out, char *err, int code);
 
-/* Return random static string of N length. */
-char *_wh_rand(int n);
-
-/* Creates tmp file the mkstemp way.  Path to temporary file will be
- * created in NAME buffer as NULL terminated string.  On success file
- * descriptor is returned, terminate program on error. */
-int _wh_tmpf(char *name);
-
-/* String To File.  Create temporary file with content of STR string.
- * Return path to that file. */
-char *_wh_s2f(char *str);
-
 /* Runs _WH_TEST macros, return number of failed tests. */
 int
 main(int argc, char **argv)
 {
-	int i, fail=0, limit=WH_MAX;
-	while ((i = getopt(argc, argv, "ql:h")) != -1) {
-		switch (i) {
+	int i=1, fail=0, limit=WH_MAX;
+	while (i) switch (getopt(argc, argv, "ql:h")) {
+		case -1: i = 0; break;
 		case 'q': _wh_quick = 1; break;
 		case 'l': limit = atoi(optarg); break;
-		default:
-			fprintf(stderr, _wh_help, argv[0]);
-			return 1;
-		}
-	}
+		default: printf(_wh_help, argv[0]); return 1;
+	};
 	for (i=0; i < _wh_all && fail < limit; i++) {
 		if (_wh_only && _wh_desc[i][0] != 'O')
 			continue;
@@ -343,21 +327,37 @@ _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 	close(fd_err[1]);
 	/* Pass standard input */
 	if (sin) {
-		if ((fd = open(sin, O_RDONLY)) == -1)
-			err(1, "open(%s)", sin);
-		while ((n = read(fd, buf, BUFSIZ)) > 0) {
-			if (write(fd_in[1], buf, n) == -1) {
+		if (sin[0] == STR[0]) {
+			if (write(fd_in[1], sin+1, strlen(sin+1)) == -1) {
 				perror("write(sin)");
 				return 0;
+			} 
+		} else {
+			if ((fd = open(sin, O_RDONLY)) == -1)
+				err(1, "open(%s)", sin);
+			while ((n = read(fd, buf, BUFSIZ)) > 0) {
+				if (write(fd_in[1], buf, n) == -1) {
+					perror("write(sin)");
+					return 0;
+				}
 			}
+			if (close(fd) == -1)
+				err(1, "close(%s)", sin);
 		}
-		if (close(fd) == -1)
-			err(1, "close(%s)", sin);
 	}
 	if (close(fd_in[1]) == -1)
 		err(1, "close(fd_in[1])");
 	/* Compare standard output */
 	if (sout) {
+		if (sout[0] == STR[0]) {
+			if ((fd = open(WH_TMP, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1)
+				err(1, "open(tmp/sout)");
+			if (write(fd, sout+1, strlen(sout+1)) == -1)
+				err(1, "write(tmp/sout)");
+			if (close(fd) == -1)
+				err(1, "close(tmp/sout)");
+			sout = WH_TMP;
+		}
 		if ((fd = open(sout, O_RDONLY)) == -1)
 			err(1, "open(%s)", sout);
 		cmp = _wh_fdcmp(fd_out[0], fd);
@@ -372,6 +372,15 @@ _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 		err(1, "close(fd_out[0])");
 	/* Compare standard error */
 	if (serr) {
+		if (serr[0] == STR[0]) {
+			if ((fd = open(WH_TMP, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1)
+				err(1, "open(tmp/serr)");
+			if (write(fd, serr+1, strlen(serr+1)) == -1)
+				err(1, "write(tmp/serr)");
+			if (close(fd) == -1)
+				err(1, "close(tmp/serr)");
+			serr = WH_TMP;
+		}
 		if ((fd = open(serr, O_RDONLY)) == -1)
 			err(1, "open(%s)", serr);
 		cmp = _wh_fdcmp(fd_err[0], fd);
@@ -396,51 +405,6 @@ _wh_run(char *cmd, char *sin, char *sout, char *serr, int code)
 		return 0;       /* Failed */
 	}
 	return 1;               /* Success */
-}
-
-char *
-_wh_rand(int n)
-{
-	static char *CHARS =
-		"abcdefghijklmnoprstuwxyz"
-		"ABCDEFGHIJKLMNOPRSTUWXYZ"
-		"0123456789";
-	static int seed = 0;
-	static char str[32];
-	assert(n > 3);
-	assert(n < (int)sizeof str);
-	srand(time(0) + seed++);
-	str[n] = 0;
-	while (n--)
-		str[n] = CHARS[rand() % (sizeof CHARS -1)];
-	return str;
-}
-
-int
-_wh_tmpf(char *name)
-{
-	static char *PREFIX = "/tmp/walter";
-	int fd;
-	do sprintf(name, "%s%s", PREFIX, _wh_rand(6));
-	while (!access(name, F_OK));
-	fd = open(name, O_RDWR | O_CREAT | O_EXCL);
-	if (fd == -1)
-		err(1, "open(%s)", name);
-	return fd;
-}
-
-char *
-_wh_s2f(char *str)
-{
-	char *name = malloc(FILENAME_MAX);      /* No free() */
-	int fd = _wh_tmpf(name);
-	assert(name);
-	assert(str);
-	if (write(fd, str, strlen(str)) == -1)
-		err(1, "write(%s)", name);
-	if (close(fd) == -1)
-		err(1, "close(%s)", name);
-	return name;
 }
 
 /* Licenses:
