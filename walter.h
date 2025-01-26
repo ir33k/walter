@@ -70,7 +70,16 @@ DISCLAIMERS
 	   along, this is not the code you are looking for  \(-_- )
 
 CHANGELOG
-	2024.01.25	v5.0
+	2024.01.26	v5.0
+
+	1. Remove EQ, NEQ, SEQ and SNEQ assertions.
+	2. Replace them with SAME and DIFF assertions.
+	3. Remove S2F macro, define simpler STR macro in it's place.
+	4. Remove verbose (-v) mode.
+	5. Replace fast (-f) option with limit (-l) option.
+	6. Print tests messages to stdou instead of stderr.
+	7. Remove WH_MAX macro enforcing limited number of tests.
+	8. Reorganize global state.
 
 	2024.01.09	v4.1
 
