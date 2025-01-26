@@ -20,76 +20,76 @@ demo/2.t.c:40:	OK(1.23 == -1.23)
 demo/2.t.c:41:	OK(0.3 == 0.1 + 0.2)
 demo/2.t.c:42:	OK(fnum == num)
 demo/2.t.c:23:	TEST numbers
-	 First incorrect byte: 11
+	First incorrect byte at index: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
 demo/2.t.c:49:	DIFF("Lorem ipsum", "Lorem ipsum", -1)
-	 First incorrect byte: 11
+	First incorrect byte at index: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
 demo/2.t.c:50:	DIFF(str, "Lorem ipsum", -1)
-	 First incorrect byte: 11
+	First incorrect byte at index: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
 demo/2.t.c:51:	DIFF(str, str, -1)
-	 First incorrect byte: 0
+	First incorrect byte at index: 0
 	""
 	""
 demo/2.t.c:52:	DIFF(NULL, NULL, -1)
-	 First incorrect byte: 0
+	First incorrect byte at index: 0
 	"Lorem ipsum"
 	""
 demo/2.t.c:54:	SAME(str, NULL, -1)
-	 First incorrect byte: 0
+	First incorrect byte at index: 0
 	"Lorem ipsum"
 	""
 demo/2.t.c:55:	SAME("Lorem ipsum", NULL, -1)
-	 First incorrect byte: 0
+	First incorrect byte at index: 0
 	"Lorem ipsum"
 	"test"
 demo/2.t.c:56:	SAME("Lorem ipsum", "test", -1)
-	 First incorrect byte: 11
+	First incorrect byte at index: 11
 	"Lorem ipsum"
 	"Lorem ipsumm"
 demo/2.t.c:57:	SAME("Lorem ipsum", "Lorem ipsumm", -1)
-	 First incorrect byte: 0
+	First incorrect byte at index: 0
 	"Lorem ipsum"
 	"lorem ipsum"
 demo/2.t.c:58:	SAME("Lorem ipsum", "lorem ipsum", -1)
-	 First incorrect byte: 122
+	First incorrect byte at index: 122
 	"din. Cras sit amet ligula sapien"
 	"din. Cras sit amet ligula Sapien"
 demo/2.t.c:60:	SAME("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", -1)
 demo/2.t.c:45:	TEST strings
-	 First incorrect byte: 10
+	First incorrect byte at index: 10
 	"Lorem ipsu"
 	"Lorem ipsu"
 demo/2.t.c:71:	DIFF("Lorem ipsum", "Lorem ipsum", 10)
-	 First incorrect byte: 39
+	First incorrect byte at index: 39
 	" hurts."
 	" hurts."
 demo/2.t.c:72:	DIFF(str, str, strlen(str))
-	 First incorrect byte: 16
+	First incorrect byte at index: 16
 	"The trick is not"
 	"The trick is not"
 demo/2.t.c:73:	DIFF(buf, buf, 16)
-	 First incorrect byte: 4
+	First incorrect byte at index: 4
 	"The "
 	"The "
 demo/2.t.c:74:	DIFF(buf, buf, 4)
-	 First incorrect byte: 4
+	First incorrect byte at index: 4
 	"The "
 	"The "
 demo/2.t.c:75:	DIFF(buf, str, 4)
-	 First incorrect byte: 6
+	First incorrect byte at index: 6
 	"Lorem ipsu"
 	"Lorem  psu"
 demo/2.t.c:77:	SAME("Lorem ipsum", "Lorem  psum", 10)
-	 First incorrect byte: 0
+	First incorrect byte at index: 0
 	"The tric"
 	"Lorem ip"
 demo/2.t.c:78:	SAME(str, "Lorem ipsum", 8)
-	 First incorrect byte: 0
+	First incorrect byte at index: 0
 	"The tric"
 	"Lorem ip"
 demo/2.t.c:79:	SAME(buf, "Lorem ipsum", 8)

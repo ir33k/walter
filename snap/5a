@@ -1,0 +1,8 @@
+	First incorrect byte at index: 3
+	"A1B2C3"
+	"A1B_C3"
+demo/5.t.c:14:	RUN("tr abc 123", STR"AaBbCc", STR"A1B_C3", 0, 0)
+	Expected exit code 1, got 0
+demo/5.t.c:16:	RUN("ls /", 0, 0, 0, 1)
+demo/5.t.c:12:	TEST Fail to demonstrate error messages
+demo/5.t.c	1 fail

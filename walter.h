@@ -5,14 +5,13 @@ with fewer complications by avoiding boilerplate.
 
 Table of contents:
 
-	Example
-	Usage
-	Disclaimers
-	Changelog
-	Licenses (at the very end of this file)
+	EXAMPLE
+	USAGE
+	DISCLAIMERS
+	CHANGELOG
+	LICENSES (at the very end of this file)
 
-Example:
-
+EXAMPLE
 	// File: test.c
 	#include "walter.h"
 
@@ -46,15 +45,13 @@ Example:
 
 	// There is no main() function
 
-Usage:
-
+USAGE
 	$ cc test.c             # Compile
 	$ ./a.out -h            # Print help
 	$ ./a.out               # Run tests
 	$ echo $?               # Number of failed tests
 
-Disclaimers:
-
+DISCLAIMERS
 	1. Library can be included only once because it has global
 	   state, relays on file line numbers and defines main().
 	2. It's expected that variables, functions and macros that are
@@ -72,8 +69,7 @@ Disclaimers:
 	   __WH_ is for super epic internal private stuff, just move
 	   along, this is not the code you are looking for  \(-_- )
 
-Changelog:
-
+CHANGELOG
 	2024.01.25	v5.0
 
 	2024.01.09	v4.1
@@ -127,7 +123,6 @@ Changelog:
 
 #define WH_MAX	256             /* Maximum number of tests */
 #define WH_SHOW 32              /* How many chars print on error */
-#define WH_TMP  "/tmp/walter"   /* Path to tmp file for RUN() */
 #define STR     "\0"            /* 1 char prefix for RUN() args */
 
 #define __WH_TEST(Desc, Id, Line)                                    \
@@ -158,8 +153,15 @@ Changelog:
 
 #define ASSERT(a,msg) _WH_ASSERT(a, msg, __LINE__)
 #define OK(a) ASSERT((a), "OK("#a")")
-#define SAME(a,b,n) ASSERT(_wh_eq(1,a,b,(size_t)n), "SAME("#a", "#b", "#n")")
-#define DIFF(a,b,n) ASSERT(_wh_eq(0,a,b,(size_t)n), "DIFF("#a", "#b", "#n")")
+
+#define SAME(a, b, n)                                                \
+	ASSERT(_wh_eq(1, a, b, (size_t)n, (size_t)n),                \
+	       "SAME("#a", "#b", "#n")")
+
+#define DIFF(a, b, n)                                                \
+	ASSERT(_wh_eq(0, a, b, (size_t)n, (size_t)n),                \
+	       "DIFF("#a", "#b", "#n")")
+
 #define RUN(cmd, in, out, err, code)                                 \
 	ASSERT(_wh_run(cmd, in, out, err, code),                     \
 	       "RUN("#cmd", "#in", "#out", "#err", "#code")")
@@ -181,16 +183,18 @@ char  *_wh_desc[WH_MAX];        /* TEST() type + description */
 int    _wh_line[WH_MAX];        /* TEST() line number in file */
 void (*_wh_func[WH_MAX])();     /* TEST() functions pointers */
 
-/* Compare buffer A with buffer B of SZ size.  When SZ is -1 then it's
- * assumend that A and B are null terminated strings.  Return non 0
- * value when EQ value is 1 and buffers are the same, or when EQ value
- * is 0 and buffers are different. */
-int _wh_eq(int eq, char *a, char *b, size_t sz);
+/* Compare buffer A of size N with buffer B of size M.  When N is -1
+ * then it's assumend that A is null terminated string, same for B and
+ * M.  Return non 0 value when EQ value is 1 and buffers are the same,
+ * or when EQ value is 0 and buffers are different. */
+int _wh_eq(int eq, char *a, char *b, size_t n, size_t m);
 
-/* Compare files pointed by A and B file descriptors.  Print error
- * message showing where the difference is if content is not the same.
- * Return 0 when files are the same. */
-int _wh_fdcmp(int a, int b);
+/* Compare A file content with SRC being either literal string when
+ * prefixed with STR or file path.  Return non 0 when different. */
+int _wh_fdcmp(int a, char *src);
+
+/* Write STR to temporary file, rewind, return file descriptor. */
+int _wh_tmp(char *str);
 
 /* Test CMD.  IN, OUT and ERR are optional paths to files used as
  * stdin, stdou and stderr, can be omitted by setting them to NULL.
@@ -228,15 +232,16 @@ main(int argc, char **argv)
 }
 
 int
-_wh_eq(int eq, char *a, char *b, size_t sz)
+_wh_eq(int eq, char *a, char *b, size_t n, size_t m)
 {
-	size_t i=0, n=sz, m=sz, offset;
-	if (sz == (size_t)-1) {
-		n = a ? strlen(a) : 0;
-		m = b ? strlen(b) : 0;
-	}
-	if (!a || !b) {         /* Handle nulls */
+	size_t i=0, offset;
+	if (n == (size_t)-1) n = a ? strlen(a) : 0;
+	if (m == (size_t)-1) m = b ? strlen(b) : 0;
+	if (!a || !b) {                 /* Nulls */
 		if (eq == (a == b))
+			return 1;
+	} else if (n == 0 || m == 0) {  /* Empty */
+		if (eq == (n == m))
 			return 1;
 	} else {
 		while (i<n && i<m && a[i] == b[i])
@@ -245,11 +250,13 @@ _wh_eq(int eq, char *a, char *b, size_t sz)
 			return 1;
 	}
 	offset = i - (i % WH_SHOW);
-	a += offset; n -= offset;
-	b += offset; m -= offset;
+	a += offset;
+	b += offset;
+	n -= offset;
+	m -= offset;
 	if (n > WH_SHOW) n = WH_SHOW;
 	if (m > WH_SHOW) m = WH_SHOW;
-	printf("\t First incorrect byte: %lu\n"
+	printf("\tFirst incorrect byte at index: %lu\n"
 	       "\t\"%.*s\"\n"
 	       "\t\"%.*s\"\n",
 	       i,
@@ -259,30 +266,58 @@ _wh_eq(int eq, char *a, char *b, size_t sz)
 }
 
 int
-_wh_fdcmp(int a, int b)
+_wh_fdcmp(int a, char *src)
 {
-	ssize_t n;
-	char buf_a[BUFSIZ];
-	char buf_b[BUFSIZ];
+	int b, eq=1, is_str;
+	ssize_t n, m;
+	char buf_a[BUFSIZ], buf_b[BUFSIZ];
+	if (!src) {
+		/* Consume A file when no SRC */
+		while (read(a, buf_a, sizeof buf_a) > 0);
+		return 0;
+	}
+	is_str = src[0] == STR[0];
+	if (is_str)
+		b = _wh_tmp(src+1);
+	else if ((b = open(src, O_RDONLY)) == -1)
+		err(1, "open(%s)", src);
 	while ((n = read(a, buf_a, sizeof buf_a)) > 0) {
-		if (read(b, buf_b, n) != n)
-			return 1;
-		if (!_wh_eq(1, buf_a, buf_b, n))
-			return 1;
+		m = read(b, buf_b, n);
+		eq = _wh_eq(1, buf_a, buf_b, n, m);
+		if (!eq)
+			goto end;
 	}
 	/* At this point A was read in it's entirely but B might still
-	 * hold more data.  If difference was not found at this point
-	 * then check if there is still something in B which means
-	 * buffers are different at last position of A.  When there is
-	 * nothing to read then we have success. */
-	return read(b, buf_b, sizeof buf_b) > 0;
+	 * hold more data. */
+	m = read(b, buf_b, sizeof buf_b);
+	if (m > 0)
+		eq = _wh_eq(1, "", buf_b, 0, m);
+end:
+	if (close(b) == -1)
+		err(1, "close(Out)");
+	if (!eq && !is_str)
+		printf("\tIn file: %s\n", src);
+	return !eq;
+}
+
+int
+_wh_tmp(char *str)
+{
+	int fd;
+	fd = open("/tmp/walter", O_RDWR | O_CREAT | O_TRUNC, 0600);
+	if (fd == -1)
+		err(1, "open(tmp)");
+	if (write(fd, str, strlen(str)) == -1)
+		err(1, "write(tmp)");
+	lseek(fd, 0, SEEK_SET);
+	return fd;
 }
 
 int
 _wh_run(char *cmd, char *In, char *Out, char *Err, int code)
 {
 	int fd, fd0[2], fd1[2], fd2[2];
-	int cmp, ws, wes;
+	int result=0, ws, wes;
 	pid_t pid;
 	char buf[BUFSIZ];
 	ssize_t n;
@@ -298,12 +333,14 @@ _wh_run(char *cmd, char *In, char *Out, char *Err, int code)
 		close(fd0[1]); close(0); dup(fd0[0]);
 		close(fd1[0]); close(1); dup(fd1[1]);
 		close(fd2[0]); close(2); dup(fd2[1]);
-		if (execl("/bin/sh", "sh", "-c", cmd, NULL) == -1)
-			err(1, "execl");
+		if (execl("/bin/sh", "sh", "-c", cmd, NULL) == -1) {
+			perror("execl");
+			result = 1;
+		}
 		close(fd0[0]);
 		close(fd1[1]);
 		close(fd2[1]);
-		exit(0);
+		exit(result);
 	}
 	/* Parent process */
 	close(fd0[0]);
@@ -311,74 +348,32 @@ _wh_run(char *cmd, char *In, char *Out, char *Err, int code)
 	close(fd2[1]);
 	/* Pass standard input */
 	if (In) {
-		if (In[0] == STR[0]) {
-			if (write(fd0[1], In+1, strlen(In+1)) == -1) {
+		if (In[0] == STR[0])
+			fd = _wh_tmp(In+1);
+		else if ((fd = open(In, O_RDONLY)) == -1)
+			err(1, "open(In)");
+		while ((n = read(fd, buf, BUFSIZ)) > 0)
+			if (write(fd0[1], buf, n) == -1) {
 				perror("write(In)");
 				return 0;
-			} 
-		} else {
-			if ((fd = open(In, O_RDONLY)) == -1)
-				err(1, "open(%s)", In);
-			while ((n = read(fd, buf, BUFSIZ)) > 0) {
-				if (write(fd0[1], buf, n) == -1) {
-					perror("write(In)");
-					return 0;
-				}
 			}
-			if (close(fd) == -1)
-				err(1, "close(%s)", In);
-		}
+		if (close(fd) == -1)
+			err(1, "close(In)");
 	}
 	if (close(fd0[1]) == -1)
 		err(1, "close(fd0[1])");
 	/* Compare standard output */
-	if (Out) {
-		if (Out[0] == STR[0]) {
-			if ((fd = open(WH_TMP, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1)
-				err(1, "open(tmp/Out)");
-			if (write(fd, Out+1, strlen(Out+1)) == -1)
-				err(1, "write(tmp/Out)");
-			if (close(fd) == -1)
-				err(1, "close(tmp/Out)");
-			Out = WH_TMP;
-		}
-		if ((fd = open(Out, O_RDONLY)) == -1)
-			err(1, "open(%s)", Out);
-		cmp = _wh_fdcmp(fd1[0], fd);
-		if (close(fd) == -1)
-			err(1, "close(%s)", Out);
-		if (cmp) {
-			printf("\tstdout\n");
-			return 0;
-		}
-	}
+	if (_wh_fdcmp(fd1[0], Out))
+		return 0;
 	if (close(fd1[0]) == -1)
 		err(1, "close(fd1[0])");
 	/* Compare standard error */
-	if (Err) {
-		if (Err[0] == STR[0]) {
-			if ((fd = open(WH_TMP, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1)
-				err(1, "open(tmp/Err)");
-			if (write(fd, Err+1, strlen(Err+1)) == -1)
-				err(1, "write(tmp/Err)");
-			if (close(fd) == -1)
-				err(1, "close(tmp/Err)");
-			Err = WH_TMP;
-		}
-		if ((fd = open(Err, O_RDONLY)) == -1)
-			err(1, "open(%s)", Err);
-		cmp = _wh_fdcmp(fd2[0], fd);
-		if (close(fd) == -1)
-			err(1, "close(%s)", Err);
-		if (cmp) {
-			printf("\tstderr\n");
-			return 0;
-		}
-	}
+	if (_wh_fdcmp(fd2[0], Err))
+		return 0;
 	if (close(fd2[0]) == -1)
 		err(1, "close(fd2[0])");
 	/* Wait for child process to exit */
-	if (waitpid(pid, &ws, 1) == -1) {
+	if (waitpid(pid, &ws, 0) == -1) {
 		perror("waitpid");
 		return 0;
 	}

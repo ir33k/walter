@@ -35,7 +35,7 @@ Compile and run:
 ```sh
 $ cc -o example.t example.t.c
 $ ./example.t
-	 First incorrect byte: 2
+	First incorrect byte at index: 2
 	"abb"
 	"abc"
 example.t.c:8:	SAME("abb", "abc", 3)

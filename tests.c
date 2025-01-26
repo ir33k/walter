@@ -16,5 +16,5 @@ TEST("Example demonstration tests should produce expected output")
 	RUN("demo/2.t -q",   0, "snap/2b",    0, 5);
 	RUN("demo/3.t",      0, "snap/3a",    0, 3);
 	RUN("demo/4.t",      0, "snap/4a",    0, 1);
-	RUN("demo/5.t",      0, "snap/empty", 0, 0);
+	RUN("demo/5.t",      0, "snap/5a",    0, 1);
 }
