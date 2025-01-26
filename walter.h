@@ -6,13 +6,12 @@ with fewer complications by avoiding boilerplate.
 Table of contents:
 
 	EXAMPLE
-	USAGE
 	DISCLAIMERS
 	CHANGELOG
 	LICENSES (at the very end of this file)
 
 EXAMPLE
-	// File: test.c
+	$ cat test.c
 	#include "walter.h"
 
 	TEST("Test description")        // Define test with assertions
@@ -45,7 +44,6 @@ EXAMPLE
 
 	// There is no main() function
 
-USAGE
 	$ cc test.c             # Compile
 	$ ./a.out -h            # Print help
 	$ ./a.out               # Run tests
@@ -70,7 +68,15 @@ DISCLAIMERS
 	   along, this is not the code you are looking for  \(-_- )
 
 CHANGELOG
-	2024.01.25	v5.0
+	2025.01.26	v5.0
+
+	1. Remove EQ, NEQ, SEQ and SNEQ assertions.
+	2. Replace them with SAME and DIFF assertions.
+	3. Remove S2F macro, define simpler STR macro in it's place.
+	4. Remove verbose (-v) mode.
+	5. Replace fast (-f) option with limit (-l) option.
+	6. Print tests messages to stdou instead of stderr.
+	7. Reorganize global state.
 
 	2024.01.09	v4.1
 
@@ -184,7 +190,7 @@ int    _wh_line[WH_MAX];        /* TEST() line number in file */
 void (*_wh_func[WH_MAX])();     /* TEST() functions pointers */
 
 /* Compare buffer A of size N with buffer B of size M.  When N is -1
- * then it's assumend that A is null terminated string, same for B and
+ * then it's assumed that A is null terminated string, same for B and
  * M.  Return non 0 value when EQ value is 1 and buffers are the same,
  * or when EQ value is 0 and buffers are different. */
 int _wh_eq(int eq, char *a, char *b, size_t n, size_t m);
