@@ -9,10 +9,10 @@ TEST("All should pass")		/* Define test with assertions */
 
 	OK(bool);		/* Is boolean true? */
 	ASSERT(bool, "text");	/* OK() with custom message */
-	SEQ(str, "David");	/* Are strings equal? */
+	EQ(str, "David", -1);	/* Are strings equal? */
 	EQ(buf, "0045", 4);	/* Are buffers equal? */
 
-	SNEQ(str, "Walter");	/* Are strings not equal? */
+	NEQ(str, "Walter", -1);	/* Are strings not equal? */
 	NEQ(buf, "123", 3);	/* Are buffers not equal? */
 
 	return;			/* Force test to end here */
@@ -24,10 +24,10 @@ TEST("You shall not pass!")	/* All should fail */
 	OK(0);
 	OK(0.1 + 0.2 == 0.3);
 	OK(44 != 44);
-	SEQ("Lorem ipsum", "Lorem ipusm");
-	SEQ("Lorem ipsumm", "Lorem ipsum");
+	EQ("Lorem ipsum", "Lorem ipusm", -1);
+	EQ("Lorem ipsumm", "Lorem ipsum", -1);
 	EQ("2345", "0045", 4);
-	SNEQ("Lorem ipsum", "Lorem ipsum");
+	NEQ("Lorem ipsum", "Lorem ipsum", -1);
 	NEQ("1234", "1234", 4);
 	ASSERT(0, "Custom fail message");
 }

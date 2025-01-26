@@ -46,19 +46,19 @@ TEST("strings")
 {
 	char *str = "Lorem ipsum";
 
-	SNEQ("Lorem ipsum", "Lorem ipsum");
-	SNEQ(str, "Lorem ipsum");
-	SNEQ(str, str);
-	SNEQ(NULL, NULL);
+	NEQ("Lorem ipsum", "Lorem ipsum", -1);
+	NEQ(str, "Lorem ipsum", -1);
+	NEQ(str, str, -1);
+	NEQ(NULL, NULL, -1);
 
-	SEQ(str, NULL);
-	SEQ("Lorem ipsum", NULL);
-	SEQ("Lorem ipsum", "test");
-	SEQ("Lorem ipsum", "Lorem ipsumm");
-	SEQ("Lorem ipsum", "lorem ipsum");
+	EQ(str, NULL, -1);
+	EQ("Lorem ipsum", NULL, -1);
+	EQ("Lorem ipsum", "test", -1);
+	EQ("Lorem ipsum", "Lorem ipsumm", -1);
+	EQ("Lorem ipsum", "lorem ipsum", -1);
 
-	SEQ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.",
-	    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.");
+	EQ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.",
+	   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", -1);
 }
 
 TEST("buffers")

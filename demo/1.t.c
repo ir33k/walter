@@ -46,14 +46,14 @@ TEST("strings")
 {
 	char  *str = "Lorem ipsum";
 
-	SEQ("Lorem ipsum", "Lorem ipsum");
-	SEQ(str, "Lorem ipsum");
-	SEQ(str, str);
-	SEQ(NULL, NULL);
+	EQ("Lorem ipsum", "Lorem ipsum", -1);
+	EQ(str, "Lorem ipsum", -1);
+	EQ(str, str, -1);
+	EQ(NULL, NULL, -1);
 
-	SNEQ(str, NULL);
-	SNEQ("Lorem ipsum", NULL);
-	SNEQ("Lorem ipsum", "test");
+	NEQ(str, NULL, -1);
+	NEQ("Lorem ipsum", NULL, -1);
+	NEQ("Lorem ipsum", "test", -1);
 }
 
 TEST("buffers")

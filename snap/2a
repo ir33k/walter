@@ -23,43 +23,43 @@ demo/2.t.c:23:	TEST numbers
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
-demo/2.t.c:49:	SNEQ("Lorem ipsum", "Lorem ipsum")
+demo/2.t.c:49:	NEQ("Lorem ipsum", "Lorem ipsum", -1)
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
-demo/2.t.c:50:	SNEQ(str, "Lorem ipsum")
+demo/2.t.c:50:	NEQ(str, "Lorem ipsum", -1)
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
-demo/2.t.c:51:	SNEQ(str, str)
+demo/2.t.c:51:	NEQ(str, str, -1)
 	 First incorrect byte: 0
 	""
 	""
-demo/2.t.c:52:	SNEQ(NULL, NULL)
-	 First incorrect byte: 0
-	"Lorem ipsum"
-	""
-demo/2.t.c:54:	SEQ(str, NULL)
+demo/2.t.c:52:	NEQ(NULL, NULL, -1)
 	 First incorrect byte: 0
 	"Lorem ipsum"
 	""
-demo/2.t.c:55:	SEQ("Lorem ipsum", NULL)
+demo/2.t.c:54:	EQ(str, NULL, -1)
+	 First incorrect byte: 0
+	"Lorem ipsum"
+	""
+demo/2.t.c:55:	EQ("Lorem ipsum", NULL, -1)
 	 First incorrect byte: 0
 	"Lorem ipsum"
 	"test"
-demo/2.t.c:56:	SEQ("Lorem ipsum", "test")
+demo/2.t.c:56:	EQ("Lorem ipsum", "test", -1)
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsumm"
-demo/2.t.c:57:	SEQ("Lorem ipsum", "Lorem ipsumm")
+demo/2.t.c:57:	EQ("Lorem ipsum", "Lorem ipsumm", -1)
 	 First incorrect byte: 0
 	"Lorem ipsum"
 	"lorem ipsum"
-demo/2.t.c:58:	SEQ("Lorem ipsum", "lorem ipsum")
+demo/2.t.c:58:	EQ("Lorem ipsum", "lorem ipsum", -1)
 	 First incorrect byte: 122
 	"din. Cras sit amet ligula sapien"
 	"din. Cras sit amet ligula Sapien"
-demo/2.t.c:60:	SEQ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.")
+demo/2.t.c:60:	EQ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", -1)
 demo/2.t.c:45:	TEST strings
 	 First incorrect byte: 10
 	"Lorem ipsu"

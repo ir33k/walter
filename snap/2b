@@ -5,7 +5,7 @@ demo/2.t.c:23:	TEST numbers
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
-demo/2.t.c:49:	SNEQ("Lorem ipsum", "Lorem ipsum")
+demo/2.t.c:49:	NEQ("Lorem ipsum", "Lorem ipsum", -1)
 demo/2.t.c:45:	TEST strings
 	 First incorrect byte: 10
 	"Lorem ipsu"
