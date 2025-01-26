@@ -4,23 +4,23 @@ demo/0.t.c:26:	OK(44 != 44)
 	 First incorrect byte: 8
 	"Lorem ipsum"
 	"Lorem ipusm"
-demo/0.t.c:27:	EQ("Lorem ipsum", "Lorem ipusm", -1)
+demo/0.t.c:27:	SAME("Lorem ipsum", "Lorem ipusm", -1)
 	 First incorrect byte: 11
 	"Lorem ipsumm"
 	"Lorem ipsum"
-demo/0.t.c:28:	EQ("Lorem ipsumm", "Lorem ipsum", -1)
+demo/0.t.c:28:	SAME("Lorem ipsumm", "Lorem ipsum", -1)
 	 First incorrect byte: 0
 	"2345"
 	"0045"
-demo/0.t.c:29:	EQ("2345", "0045", 4)
+demo/0.t.c:29:	SAME("2345", "0045", 4)
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
-demo/0.t.c:30:	NEQ("Lorem ipsum", "Lorem ipsum", -1)
+demo/0.t.c:30:	DIFF("Lorem ipsum", "Lorem ipsum", -1)
 	 First incorrect byte: 4
 	"1234"
 	"1234"
-demo/0.t.c:31:	NEQ("1234", "1234", 4)
+demo/0.t.c:31:	DIFF("1234", "1234", 4)
 demo/0.t.c:32:	Custom fail message
 demo/0.t.c:22:	TEST You shall not pass!
 demo/0.t.c:42:	Fail

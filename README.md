@@ -24,7 +24,7 @@ Example
 TEST("Test description")        // Define test with assertions
 {
 	OK(strlen("abc") == 3); // Fail when not true
-	EQ("abb", "abc", 3);    // Fail when buffers of size 3 are not equal
+	SAME("abb", "abc", 3);  // Fail when buffers of size 3 are different
 }
 
 // No main() function as it is already defined in walter.h
@@ -38,7 +38,7 @@ $ ./example.t
 	 First incorrect byte: 2
 	"abb"
 	"abc"
-example.t.c:8:	EQ("abb", "abc", 3)
+example.t.c:8:	SAME("abb", "abc", 3)
 example.t.c:5:	TEST Test description
 example.t.c	1 fail
 ```

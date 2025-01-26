@@ -46,14 +46,14 @@ TEST("strings")
 {
 	char  *str = "Lorem ipsum";
 
-	EQ("Lorem ipsum", "Lorem ipsum", -1);
-	EQ(str, "Lorem ipsum", -1);
-	EQ(str, str, -1);
-	EQ(NULL, NULL, -1);
+	SAME("Lorem ipsum", "Lorem ipsum", -1);
+	SAME(str, "Lorem ipsum", -1);
+	SAME(str, str, -1);
+	SAME(NULL, NULL, -1);
 
-	NEQ(str, NULL, -1);
-	NEQ("Lorem ipsum", NULL, -1);
-	NEQ("Lorem ipsum", "test", -1);
+	DIFF(str, NULL, -1);
+	DIFF("Lorem ipsum", NULL, -1);
+	DIFF("Lorem ipsum", "test", -1);
 }
 
 TEST("buffers")
@@ -63,15 +63,15 @@ TEST("buffers")
 
 	strncpy(buf, str, 16);
 
-	EQ("Lorem ipsum", "Lorem ipsum", 10);
-	EQ(str, str, strlen(str));
-	EQ(buf, buf, 16);
-	EQ(buf, buf, 4);
-	EQ(buf, str, 4);
+	SAME("Lorem ipsum", "Lorem ipsum", 10);
+	SAME(str, str, strlen(str));
+	SAME(buf, buf, 16);
+	SAME(buf, buf, 4);
+	SAME(buf, str, 4);
 
-	NEQ("Lorem ipsum", "Lorem  psum", 10);
-	NEQ(str, "Lorem ipsum", 8);
-	NEQ(buf, "Lorem ipsum", 8);
+	DIFF("Lorem ipsum", "Lorem  psum", 10);
+	DIFF(str, "Lorem ipsum", 8);
+	DIFF(buf, "Lorem ipsum", 8);
 }
 
 TEST("flow")

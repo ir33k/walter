@@ -13,39 +13,36 @@ Table of contents:
 
 Example:
 
+	// File: test.c
 	#include "walter.h"
 
 	TEST("Test description")        // Define test with assertions
 	{
-		ASSERT(bool, "msg");    // Print message on false
-		OK(bool);               // Is boolean true?
-		EQ(b1, b2, size);       // Are buffers equal?
-		NEQ(b1, b2, size);      // Are buffers not equal?
-		EQ(s1, s2, -1);         // Are strings equal?
-		NEQ(s1, s2, -1);        // Are strings not equal?
-		return;                 // Force end of test
+	    ASSERT(bool, "msg");        // Print message on false
+	    OK(bool);                   // Is boolean true?
+	    SAME(b1, b2, size);         // Are buffers the same?
+	    SAME(s1, s2, -1);           // Are strings the same?
+	    DIFF(b1, b2, size);         // Are buffers different?
+	    DIFF(s1, s2, -1);           // Are strings different?
+	    return;                     // Force end of test
 
-		// Run CMD with IN standard input expecting OUT
-		// standard output and ERR standard error and CODE
-		// exit code.  When file path for IN, OUT, ERR are
-		// NULL then this part of input/output is ignored.
-		//
-		//   CMD          IN        OUT        ERR       CODE
-		RUN("grep wh_",  "in.txt", "out.txt", "err.txt", 0);
-		RUN("sed -i",    "in.txt",  NULL,      NULL,     1);
-		RUN("./demo0.t",  NULL,    "out.txt", "err.txt", 5);
-		RUN("ls -lh",     NULL,    "out.txt",  NULL,     0);
-		RUN("pwd",        0,        0,         0,        0);
-
-		// If you want to use string literals instead of file
-		// paths then use STR macro as prefix.
-		RUN("tr abc 123", STR"AaBbCc", STR"A1B2C3", 0, 0);
+	    // Run CMD with std IN expecting std OUT, std ERR and exit
+	    // CODE.  Ignore IN, OUT or ERR by passing NULL.  To pass
+	    // string literals instead of file paths use STR prefix.
+	    //
+	    //  CMD           IN         OUT         ERR         CODE
+	    RUN("grep wh_",   "in.txt",  "out.txt",  "err.txt",  0);
+	    RUN("sed -i",     "in.txt",  NULL,       NULL,       1);
+	    RUN("./demo0.t",  NULL,      "out.txt",  "err.txt",  5);
+	    RUN("ls -lh",     NULL,      "out.txt",  NULL,       0);
+	    RUN("pwd",        0,         0,          0,          0);
+	    RUN("tr ab AB",   STR"ab",   STR"AB",    0,          0);
 	}
-	TEST("Another test 1") {...}    // Define as many as WH_MAX
-	SKIP("Another test 2") {...}    // Skip or just ignore test
-	SKIP("Another test 3") {}       // Body can be empty
-	SKIP("TODO test 4")    {}       // Can be used for TODOs
-	ONLY("Another test 5") {...}    // Ignore all other tests
+	TEST("Test 1") {...}            // Define as many as WH_MAX
+	SKIP("Test 2") {...}            // Skip or just ignore test
+	SKIP("Test 3") {}               // Body can be empty
+	SKIP("TODO Test 4") {}          // Can be used for TODOs
+	ONLY("Test 5") {...}            // Ignore all other tests
 
 	// There is no main() function
 
@@ -73,7 +70,7 @@ Disclaimers:
 	   short and easy to change.
 	6. WH_ prefix stands for Walter.H.  _WH_ is for private stuff.
 	   __WH_ is for super epic internal private stuff, just move
-	   along, this is not the code you are looking for \(-_- )
+	   along, this is not the code you are looking for  \(-_- )
 
 Changelog:
 
@@ -128,10 +125,10 @@ Changelog:
 #include <time.h>
 #include <unistd.h>
 
-#define WH_MAX  256             /* Maximum number of tests */
+#define WH_MAX	256             /* Maximum number of tests */
 #define WH_SHOW 32              /* How many chars print on error */
-#define WH_TMP "/tmp/walter"    /* Path to tmp file for RUN() */
-#define STR "\0"                /* 1 char prefix for RUN() args */
+#define WH_TMP  "/tmp/walter"   /* Path to tmp file for RUN() */
+#define STR     "\0"            /* 1 char prefix for RUN() args */
 
 #define __WH_TEST(Desc, Id, Line)                                    \
 	void __wh_body##Id();                                        \
@@ -161,8 +158,8 @@ Changelog:
 
 #define ASSERT(a,msg) _WH_ASSERT(a, msg, __LINE__)
 #define OK(a) ASSERT((a), "OK("#a")")
-#define  EQ(a,b,n) ASSERT(_wh_eq(1,a,b,(size_t)n),  "EQ("#a", "#b", "#n")")
-#define NEQ(a,b,n) ASSERT(_wh_eq(0,a,b,(size_t)n), "NEQ("#a", "#b", "#n")")
+#define SAME(a,b,n) ASSERT(_wh_eq(1,a,b,(size_t)n), "SAME("#a", "#b", "#n")")
+#define DIFF(a,b,n) ASSERT(_wh_eq(0,a,b,(size_t)n), "DIFF("#a", "#b", "#n")")
 #define RUN(cmd, in, out, err, code)                                 \
 	ASSERT(_wh_run(cmd, in, out, err, code),                     \
 	       "RUN("#cmd", "#in", "#out", "#err", "#code")")
@@ -175,13 +172,13 @@ char *_wh_help =
 "	-l N	Limit, stop after N number of failed tests.\n"
 "	-h	Prints this help message.\n";
 
-char *_wh_file=0;               /* Path to test file */
-int _wh_quick=0;                /* True for -q option */
-int _wh_all=0;                  /* Number of all tests */
-int _wh_only=0;                 /* Non 0 when ONLY() macro was used */
-int _wh_mistake;                /* Number of failed assertions in test */
-char *_wh_desc[WH_MAX];         /* TEST() type + description */
-int _wh_line[WH_MAX];           /* TEST() line number in file */
+char  *_wh_file=0;              /* Path to test file */
+int    _wh_quick=0;             /* True for -q option */
+int    _wh_all=0;               /* Number of all tests */
+int    _wh_only=0;              /* Non 0 when ONLY() macro was used */
+int    _wh_mistake;             /* Number of failed assertions in test */
+char  *_wh_desc[WH_MAX];        /* TEST() type + description */
+int    _wh_line[WH_MAX];        /* TEST() line number in file */
 void (*_wh_func[WH_MAX])();     /* TEST() functions pointers */
 
 /* Compare buffer A with buffer B of SZ size.  When SZ is -1 then it's
@@ -207,7 +204,7 @@ int _wh_run(char *cmd, char *In, char *Out, char *Err, int code);
 int
 main(int argc, char **argv)
 {
-	int i=1, fail=0, limit=WH_MAX;
+	int i, fail=0, limit=WH_MAX;
 	while ((i = getopt(argc, argv, "ql:h")) != -1) switch (i) {
 		case 'q': _wh_quick = 1; break;
 		case 'l': limit = atoi(optarg); break;
@@ -294,20 +291,15 @@ _wh_run(char *cmd, char *In, char *Out, char *Err, int code)
 	if (pipe(fd1) == -1) err(1, "pipe(out)");
 	if (pipe(fd2) == -1) err(1, "pipe(err)");
 	if ((pid = fork()) == -1) err(1, "fork");
-	if (pid == 0) {           /* Child process, the CMD */
+	/* Child process, the CMD */
+	if (pid == 0) {
 		/* Redirect std in, out and err of child to my pipe
 		 * files.  Index 1 is for writing, 0 for reading */
 		close(fd0[1]); close(0); dup(fd0[0]);
 		close(fd1[0]); close(1); dup(fd1[1]);
 		close(fd2[0]); close(2); dup(fd2[1]);
-		if (execl("/bin/sh", "sh", "-c", cmd, NULL) == -1) {
-			/* TODO(irek): Probably a bug, how it supposed
-			 * to report the error when being the child
-			 * process and the return 0 should probably be
-			 * replaced with exit(1). */
-			perror("execl");
-			return 0;
-		}
+		if (execl("/bin/sh", "sh", "-c", cmd, NULL) == -1)
+			err(1, "execl");
 		close(fd0[0]);
 		close(fd1[1]);
 		close(fd2[1]);

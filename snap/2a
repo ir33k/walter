@@ -23,76 +23,76 @@ demo/2.t.c:23:	TEST numbers
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
-demo/2.t.c:49:	NEQ("Lorem ipsum", "Lorem ipsum", -1)
+demo/2.t.c:49:	DIFF("Lorem ipsum", "Lorem ipsum", -1)
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
-demo/2.t.c:50:	NEQ(str, "Lorem ipsum", -1)
+demo/2.t.c:50:	DIFF(str, "Lorem ipsum", -1)
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsum"
-demo/2.t.c:51:	NEQ(str, str, -1)
+demo/2.t.c:51:	DIFF(str, str, -1)
 	 First incorrect byte: 0
 	""
 	""
-demo/2.t.c:52:	NEQ(NULL, NULL, -1)
-	 First incorrect byte: 0
-	"Lorem ipsum"
-	""
-demo/2.t.c:54:	EQ(str, NULL, -1)
+demo/2.t.c:52:	DIFF(NULL, NULL, -1)
 	 First incorrect byte: 0
 	"Lorem ipsum"
 	""
-demo/2.t.c:55:	EQ("Lorem ipsum", NULL, -1)
+demo/2.t.c:54:	SAME(str, NULL, -1)
+	 First incorrect byte: 0
+	"Lorem ipsum"
+	""
+demo/2.t.c:55:	SAME("Lorem ipsum", NULL, -1)
 	 First incorrect byte: 0
 	"Lorem ipsum"
 	"test"
-demo/2.t.c:56:	EQ("Lorem ipsum", "test", -1)
+demo/2.t.c:56:	SAME("Lorem ipsum", "test", -1)
 	 First incorrect byte: 11
 	"Lorem ipsum"
 	"Lorem ipsumm"
-demo/2.t.c:57:	EQ("Lorem ipsum", "Lorem ipsumm", -1)
+demo/2.t.c:57:	SAME("Lorem ipsum", "Lorem ipsumm", -1)
 	 First incorrect byte: 0
 	"Lorem ipsum"
 	"lorem ipsum"
-demo/2.t.c:58:	EQ("Lorem ipsum", "lorem ipsum", -1)
+demo/2.t.c:58:	SAME("Lorem ipsum", "lorem ipsum", -1)
 	 First incorrect byte: 122
 	"din. Cras sit amet ligula sapien"
 	"din. Cras sit amet ligula Sapien"
-demo/2.t.c:60:	EQ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", -1)
+demo/2.t.c:60:	SAME("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sodales consequat nulla et sollicitudin. Cras sit amet ligula Sapien. In quis ultrices purus. Morbi sodales at velit vulputate aliquam.", -1)
 demo/2.t.c:45:	TEST strings
 	 First incorrect byte: 10
 	"Lorem ipsu"
 	"Lorem ipsu"
-demo/2.t.c:71:	NEQ("Lorem ipsum", "Lorem ipsum", 10)
+demo/2.t.c:71:	DIFF("Lorem ipsum", "Lorem ipsum", 10)
 	 First incorrect byte: 39
 	" hurts."
 	" hurts."
-demo/2.t.c:72:	NEQ(str, str, strlen(str))
+demo/2.t.c:72:	DIFF(str, str, strlen(str))
 	 First incorrect byte: 16
 	"The trick is not"
 	"The trick is not"
-demo/2.t.c:73:	NEQ(buf, buf, 16)
+demo/2.t.c:73:	DIFF(buf, buf, 16)
 	 First incorrect byte: 4
 	"The "
 	"The "
-demo/2.t.c:74:	NEQ(buf, buf, 4)
+demo/2.t.c:74:	DIFF(buf, buf, 4)
 	 First incorrect byte: 4
 	"The "
 	"The "
-demo/2.t.c:75:	NEQ(buf, str, 4)
+demo/2.t.c:75:	DIFF(buf, str, 4)
 	 First incorrect byte: 6
 	"Lorem ipsu"
 	"Lorem  psu"
-demo/2.t.c:77:	EQ("Lorem ipsum", "Lorem  psum", 10)
+demo/2.t.c:77:	SAME("Lorem ipsum", "Lorem  psum", 10)
 	 First incorrect byte: 0
 	"The tric"
 	"Lorem ip"
-demo/2.t.c:78:	EQ(str, "Lorem ipsum", 8)
+demo/2.t.c:78:	SAME(str, "Lorem ipsum", 8)
 	 First incorrect byte: 0
 	"The tric"
 	"Lorem ip"
-demo/2.t.c:79:	EQ(buf, "Lorem ipsum", 8)
+demo/2.t.c:79:	SAME(buf, "Lorem ipsum", 8)
 demo/2.t.c:64:	TEST buffers
 demo/2.t.c:84:	Custom fail message
 demo/2.t.c:82:	TEST flow
